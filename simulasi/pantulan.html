@@ -41,7 +41,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .bracket{height:100px;width:12px;border:3px solid var(--accent)}
 .bl{border-right:0;border-radius:8px 0 0 8px}.br{border-left:0;border-radius:0 8px 8px 0}
 .hint{font-size:13px;font-weight:600;margin:0 0 8px}
-svg{display:block;width:100%;height:auto;touch-action:none;font-family:'Inter',sans-serif}.canvasbox{border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--bg)}
+svg{display:block;width:100%;height:auto;touch-action:none;font-family:'Inter',sans-serif}#rays{transition:opacity .6s ease}.canvasbox{border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--bg)}
 canvas{width:100%;height:auto;display:block;touch-action:none;cursor:crosshair}
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12px;font-weight:600}
 .legend span{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}
@@ -79,7 +79,7 @@ input[type=range]{accent-color:var(--accent)}
 <div class="a-canvas">
 <p class="hint">Klik grid atau seret bentuk biru — bucu terkunci pada grid</p>
 <div class="canvasbox"><div id="movewarning" class="warning" role="alert" aria-live="assertive"></div><svg id="svg" viewBox="0 0 600 440" aria-label="Grid Cartes dan animasi pantulan"><rect width="600" height="440" fill="#0B1220"/><g id="grid"></g><g id="refaxis"></g><g id="original"></g><g id="rays"></g><g id="image"></g><g id="effects"></g><rect id="hit" width="600" height="440" fill="transparent" style="cursor:crosshair;touch-action:none"/></svg></div>
-<div class="legend"><span><i style="background:#38BDF8"></i>Bentuk asal</span><span><i style="background:#C084FC"></i>Garis pantulan</span><span><i style="background:#34D399"></i>Ke garis</span><span><i style="background:#FB923C"></i>Ke imej</span><span><i style="background:#F472B6"></i>Imej</span></div>
+<div class="legend"><span><i style="background:#38BDF8"></i>Bentuk asal</span><span><i style="background:#C084FC"></i>Garis pantulan</span><span><i style="background:#34D399"></i>Ke garis</span><span><i style="background:repeating-linear-gradient(90deg,#FB923C 0 4px,transparent 4px 6px);border-radius:2px;width:16px;height:4px"></i>Ke imej</span><span><i style="background:#F472B6"></i>Imej</span></div>
 </div>
 <section class="panel a-player">
 <div class="row" style="justify-content:space-between"><span id="stage" class="muted">Langkah 0 / 9</span><span id="status" class="muted">Sedia</span></div>
@@ -149,7 +149,7 @@ pts=template.map(p=>[p[0]+anchor[0],p[1]+anchor[1]]);imgs=pts.map(reflect);
 make('polygon',{points:pts.map(P).map(q=>q.join(',')).join(' '),fill:'#0284c7','fill-opacity':'.22',stroke:'#38bdf8','stroke-width':3},g.original);
 pts.forEach((p,i)=>{let q=P(p);make('circle',{cx:q[0],cy:q[1],r:4,fill:'#7dd3fc'},g.original);textAt(g.original,p,L[i],'#e0f2fe',i===0?-14:8,i<2?18:-11)});
 steps=[];
-pts.forEach((p,i)=>[[p,foot(p)],[foot(p),imgs[i]]].forEach(([from,to],half)=>{let start=P(from),end=P(to),units=Math.max(Math.abs(to[0]-from[0]),Math.abs(to[1]-from[1]));let line=make('line',{x1:start[0],y1:start[1],x2:start[0],y2:start[1],stroke:half?'#fb923c':'#34d399','stroke-width':3,'stroke-linecap':'round'},g.rays);steps.push({type:'ray',index:i,half,a:start,b:end,units,line})}));
+pts.forEach((p,i)=>[[p,foot(p)],[foot(p),imgs[i]]].forEach(([from,to],half)=>{let start=P(from),end=P(to),units=Math.max(Math.abs(to[0]-from[0]),Math.abs(to[1]-from[1]));let line=make('line',{x1:start[0],y1:start[1],x2:start[0],y2:start[1],stroke:half?'#fb923c':'#34d399','stroke-width':3,'stroke-linecap':'round'},g.rays);if(half)line.setAttribute('stroke-dasharray','7 6');steps.push({type:'ray',index:i,half,a:start,b:end,units,line})}));
 vertices=imgs.map((p,i)=>{let group=make('g',{},g.image),q=P(p);make('circle',{cx:q[0],cy:q[1],r:4,fill:'#f472b6'},group);textAt(group,p,L[i]+'′','#fbcfe8',i===0?-14:8,i<2?18:-11);return group});
 imgs.forEach((p,i)=>{let start=P(p),end=P(imgs[(i+1)%imgs.length]),line=make('line',{x1:start[0],y1:start[1],x2:start[0],y2:start[1],stroke:'#f472b6','stroke-width':3.8,'stroke-linecap':'round'},g.image);steps.push({type:'edge',index:i,a:start,b:end,units:Math.hypot(end[0]-start[0],end[1]-start[1])/S,line})});
 glow=make('circle',{r:20,fill:'#facc15','fill-opacity':'.16'},g.fx);ring=make('circle',{r:15,fill:'none',stroke:'#facc15','stroke-width':3.5},g.fx);blink=make('circle',{r:12,fill:'#facc15','fill-opacity':'.3',stroke:'#facc15','stroke-width':3},g.fx);tip=make('circle',{r:5,fill:'#facc15',stroke:'white','stroke-width':1},g.fx);num=make('text',{fill:'#fde68a','font-size':17,'font-weight':700,'font-family':'Space Grotesk, sans-serif','text-anchor':'middle',stroke:'#0B1220','stroke-width':3.5,'paint-order':'stroke','pointer-events':'none'},g.fx);draw();
@@ -161,7 +161,7 @@ let s=steps[index],ray=s&&s.type==='ray';
 if(ray&&s.half===0&&mode==='highlight'){let p=P(pts[s.index]),v=Math.abs(Math.sin(wait/170));[ring,glow].forEach(e=>{e.setAttribute('cx',p[0]);e.setAttribute('cy',p[1]);e.setAttribute('r',14+8*v);e.style.opacity=.35+.65*v})}else{ring.style.opacity=0;glow.style.opacity=0}
 if(ray&&mode==='axisHold'){let v=Math.abs(Math.sin(wait/140));blink.setAttribute('cx',s.a[0]);blink.setAttribute('cy',s.a[1]);blink.setAttribute('r',10+8*v);blink.style.opacity=.15+.85*v}else blink.style.opacity=0;
 if(s&&mode==='move'){let x=s.a[0]+(s.b[0]-s.a[0])*progress,y=s.a[1]+(s.b[1]-s.a[1])*progress;tip.setAttribute('cx',x);tip.setAttribute('cy',y);tip.style.opacity=progress>0?1:0;if(ray&&progress>0&&s.units>0){let count=Math.min(Math.max(1,Math.ceil(s.units)),Math.floor(progress*s.units+1e-6)+1);num.setAttribute('x',x+15);num.setAttribute('y',y-13);num.textContent=String(count);num.style.opacity=1}else num.style.opacity=0}else{tip.style.opacity=0;num.style.opacity=0}
-vertices.forEach((v,i)=>v.style.opacity=index>=2*i+2?1:0);
+vertices.forEach((v,i)=>v.style.opacity=index>=2*i+2?1:0);g.rays.style.opacity=index>=steps.length?0:1;
 $('stage').textContent=`Langkah ${index} / ${steps.length}`;
 $('status').textContent=mode==='idle'?'Sedia':!s?'Selesai':s.type==='edge'?`Bina sisi ${L[s.index]}′–${L[(s.index+1)%pts.length]}′`:L[s.index]+(s.half?' → '+L[s.index]+'′':' → garis');
 $('progress').style.width=(steps.length?(index+progress)/steps.length*100:0)+'%';updateButtons();
@@ -169,7 +169,7 @@ $('progress').style.width=(steps.length?(index+progress)/steps.length*100:0)+'%'
 function nextMode(){if(index>=steps.length)return 'done';let s=steps[index];return s.type==='edge'?'move':s.half===0?'highlight':'axisHold'}
 function advance(){index=Math.min(steps.length,index+1);progress=0;wait=0;mode=nextMode();if(index===steps.length)stop()}
 function tick(now){if(!playing)return;if(last===null)last=now;let dt=Math.min(now-last,60)*Number($('speed').value);last=now;
-if(mode==='highlight'){wait+=dt;if(wait>=1050){wait=0;mode='move'}}else if(mode==='axisHold'){wait+=dt;if(wait>=1050){wait=0;mode='move'}}else if(mode==='move'){let s=steps[index];if(s){progress+=dt/Math.max(650,s.units*550);if(progress>=1)advance()}else stop()}draw();if(playing)frame=requestAnimationFrame(tick)}
+if(mode==='highlight'){wait+=dt;if(wait>=850){wait=0;mode='move'}}else if(mode==='axisHold'){wait+=dt;if(wait>=810){wait=0;mode='move'}}else if(mode==='move'){let s=steps[index];if(s){progress+=dt/(s.type==='edge'?480:Math.max(550,s.units*360));if(progress>=1)advance()}else stop()}draw();if(playing)frame=requestAnimationFrame(tick)}
 $('play').onclick=()=>{if(!valid)return;if(playing){stop();draw();return}if(index>=steps.length){index=0;progress=0;mode='idle';wait=0}if(mode==='idle'){mode='highlight';wait=0}playing=true;last=null;updateButtons();draw();frame=requestAnimationFrame(tick)};
 function jump(dir){if(!valid)return;stop();if(dir>0){if(index>=steps.length)return;index++}else{if(index===0){progress=0;mode='idle';draw();return}index--}progress=0;wait=0;mode=index===0?'idle':index>=steps.length?'done':'move';draw()}
 $('next').onclick=()=>jump(1);$('prev').onclick=()=>jump(-1);$('reset').onclick=()=>{anchor=[-4,1];setup()};
