@@ -1,6 +1,6 @@
 /* ISOMOVE service worker – membolehkan app digunakan tanpa internet.
    Tukar VERSION setiap kali fail app dikemas kini supaya murid dapat versi baharu. */
-const VERSION = 'isomove-v26';
+const VERSION = 'isomove-v27';
 
 const APP_FILES = [
   './',
@@ -28,7 +28,7 @@ const APP_FILES = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(VERSION).then((cache) => cache.addAll(APP_FILES)).then(() => self.skipWaiting())
+    caches.open(VERSION).then((cache) => cache.addAll(APP_FILES.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting())
   );
 });
 
@@ -44,9 +44,10 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
 
-  // Internet dulu (sentiasa dapat versi terbaharu), kalau tiada internet guna salinan dalam peranti
+  // Salinan dalam peranti dahulu (pantas, juga tanpa internet). Versi baharu dipasang bila VERSION ditukar:
+  // service worker baharu muat turun semua fail, kemudian app muat semula sendiri.
   event.respondWith(
-    fetch(req, { cache: 'no-cache' })
+    caches.match(req, { ignoreSearch: true }).then((hit) => hit || fetch(req)
       .then((res) => {
         if (res && res.ok) {
           const copy = res.clone();
@@ -54,10 +55,6 @@ self.addEventListener('fetch', (event) => {
         }
         return res;
       })
-      .catch(() =>
-        caches.match(req, { ignoreSearch: true }).then((hit) =>
-          hit || (req.mode === 'navigate' ? caches.match('./index.html') : undefined)
-        )
-      )
+      .catch(() => (req.mode === 'navigate' ? caches.match('./index.html') : undefined)))
   );
 });

@@ -76,6 +76,7 @@ input[type=range]{accent-color:var(--accent)}.note{background:var(--bg);border:1
 .a-canvas:has(.warning:not(:empty)) .hint{display:none}
 /* ===== Kawalan padat + satu skrin di telefon ===== */
 .back svg{width:22px;height:22px;flex:none}
+.back:active{transform:scale(.94);background:var(--border)}
 .crow{display:flex;align-items:center;gap:8px}
 .crow+.crow{margin-top:10px}
 .cl{flex:none;width:60px;margin:0;font-size:12px;font-weight:700;color:var(--muted)}
@@ -126,7 +127,7 @@ input[type=range]{accent-color:var(--accent)}.note{background:var(--bg);border:1
 <body>
 <main class="wrap">
 <header class="top">
-<a class="back" href="../#/simulasi" aria-label="Kembali ke Simulasi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg><span>Kembali</span></a>
+<a class="back" id="backbtn" href="../#/simulasi" aria-label="Kembali ke Simulasi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg><span>Kembali</span></a>
 <div><span class="eyebrow">ISOMOVE · Simulasi</span><h1>Translasi</h1><p>Gerakkan objek mengikut vektor translasi</p></div>
 <span class="top-snd" id="sndslot"></span></header>
 <div class="grid">
@@ -160,6 +161,7 @@ function advance(){step++;t=0;elapsed=0;phase=step>=2?'done':'moving';if(step>=2
 E('play').onclick=function(){if(!valid)return;if(playing){stop();draw();return}if(step>=2){step=0;t=0;phase='idle'}if(phase==='idle')phase='highlight';playing=true;last=0;draw();raf=requestAnimationFrame(tick)};function jump(d){stop();step=Math.max(0,Math.min(2,step+d));t=0;elapsed=0;phase=step===0?'idle':step===2?'done':'moving';draw()}E('prev').onclick=function(){jump(-1)};E('next').onclick=function(){jump(1)};E('reset').onclick=function(){anchor=[-5,-2];rebuild()};E('speed').oninput=function(){E('speedtext').textContent=Number(E('speed').value).toFixed(1)+'×'};E('shape').onchange=function(){var s=E('shape').value;shape=s==='random'?randomShape():presets[s];rebuild()};E('random').onclick=function(){shape=randomShape();rebuild()};function apply(){var a=E('dx').value.trim(),b=E('dy').value.trim(),x=Number(a),y=Number(b);if(!a||!b||!Number.isInteger(x)||!Number.isInteger(y)||Math.abs(x)>8||Math.abs(y)>6){warn('⚠ Nombor bulat sahaja: x −8 hingga 8, y −6 hingga 6');return}var ox=dx,oy=dy,oa=anchor.slice();dx=x;dy=y;if(!findValid()){dx=ox;dy=oy;anchor=oa;warn('⚠ Imej tidak muat dalam grid');return}rebuild()}E('apply').onclick=apply;['dx','dy'].forEach(function(id){E(id).onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();apply()}}});function pointer(e){var r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width*600,(e.clientY-r.top)/r.height*440]}function gridPoint(p){return[(p[0]-OX)/S,(OY-p[1])/S]}function inside(p){var ps=pts(anchor).map(xy),hit=false;for(var i=0,j=ps.length-1;i<ps.length;j=i++){var a=ps[i],b=ps[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])hit=!hit}return hit}function place(a){var q=[Math.round(a[0]),Math.round(a[1])];if(fits(q)){if(q[0]!==anchor[0]||q[1]!==anchor[1]){anchor=q;resetAnim()}warn('')}else warn('⚠ Di luar grid')}cv.addEventListener('pointerdown',function(e){var p=pointer(e),v=gridPoint(p),c=centroid();drag=true;if(inside(p)){offset=[anchor[0]-v[0],anchor[1]-v[1]]}else{offset=[-c[0],-c[1]];place([v[0]+offset[0],v[1]+offset[1]])}try{cv.setPointerCapture(e.pointerId)}catch(err){}});cv.addEventListener('pointermove',function(e){if(!drag)return;var v=gridPoint(pointer(e));place([v[0]+offset[0],v[1]+offset[1]])});cv.addEventListener('pointerup',function(){drag=false});cv.addEventListener('pointercancel',function(){drag=false});rebuild();})();
 
 </script>
+<script>(function(){var b=document.getElementById('backbtn');b.addEventListener('click',function(e){try{var r=document.referrer?new URL(document.referrer):null;if(r&&r.origin===location.origin&&history.length>1){e.preventDefault();history.back()}}catch(x){}})})();</script>
 <script src="../js/fx.js"></script>
 <script>if(window.FX){document.getElementById('sndslot').innerHTML=FX.button();FX.watchSim('status',document.querySelector('.canvasbox'))}</script>
 </body>
