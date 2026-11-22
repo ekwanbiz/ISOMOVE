@@ -216,8 +216,7 @@
         </div>`;
     },
     latihan: () => Lat.render(),
-    kuiz: () => soon('Kuiz Pantas', 'Uji kefahaman dan kumpul bintang.', 'var(--green)', 'trophy',
-      'Kuiz 10 soalan dengan pemasa akan dimasukkan di sini.', ['10 soalan', 'Pemasa', 'Rekod markah']),
+    kuiz: () => Kuiz.render(),
 
     pasang() {
       const step = (n, ic, t, d) => `<li class="card step"><span class="num">${n}</span><span class="txt"><b>${t}</b><span>${d}</span></span><span class="ico">${icon(ic)}</span></li>`;
@@ -640,7 +639,214 @@
     function onKey(e) {
       if (e.key === 'Enter' && e.target.matches('[data-lat-in]') && !s.checked) { e.preventDefault(); check(); }
     }
-    return { render, onClick, onKey, reset: () => { if (s.screen === 'done') s.screen = 'menu'; } };
+    return { render, onClick, onKey, gen: (t, l) => GEN[l](t), reset: () => { if (s.screen === 'done') s.screen = 'menu'; } };
+  })();
+
+  /* ===================== KUIZ ===================== */
+  const Kuiz = (() => {
+    const N_Q = 10, SECS = 60;
+    const TOPIC = { translasi: 'Translasi', pantulan: 'Pantulan', putaran: 'Putaran' };
+    const m = (v) => String(v).replace('-', '−');
+    const vec = (a, b) => `<span class="vec"><span>${m(a)}</span><span>${m(b)}</span></span>`;
+    const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    let k = { screen: 'start' };
+    let timer = null;
+
+    function plan() {
+      // 3 mudah, 4 sederhana, 3 sukar; topik diagih sama rata secara rawak
+      const levels = ['mudah', 'mudah', 'mudah', 'sederhana', 'sederhana', 'sederhana', 'sederhana', 'sukar', 'sukar', 'sukar'];
+      const pool = ['translasi', 'pantulan', 'putaran'];
+      let topics = [];
+      while (topics.length < N_Q) topics = topics.concat(pool.slice().sort(() => Math.random() - 0.5));
+      topics = topics.slice(0, N_Q).sort(() => Math.random() - 0.5);
+      return levels.map((lv, i) => ({ topic: topics[i], level: lv, q: Lat.gen(topics[i], lv) }));
+    }
+
+    function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+    function startTimer() {
+      stopTimer();
+      k.left = SECS;
+      timer = setInterval(() => {
+        k.left--;
+        const el = document.querySelector('[data-kz-timer]');
+        if (el) {
+          el.textContent = k.left;
+          const pill = el.closest('.k-timer');
+          pill.classList.toggle('low', k.left <= 15);
+          pill.classList.toggle('crit', k.left <= 5);
+          const bar = document.querySelector('[data-kz-tbar]');
+          if (bar) bar.style.width = (k.left / SECS * 100) + '%';
+        }
+        if (k.left <= 0) { stopTimer(); answer(true); }
+      }, 1000);
+    }
+
+    function begin() {
+      k = { screen: 'quiz', qs: plan(), i: 0, score: 0, sel: null, val: ['', ''], checked: false, ok: false, timedOut: false, left: SECS, t0: Date.now(), by: {} };
+      Object.keys(TOPIC).forEach((t) => { k.by[t] = [0, 0]; });
+      rerender(true);
+      startTimer();
+    }
+
+    function answer(timedOut) {
+      const item = k.qs[k.i], q = item.q;
+      if (!timedOut) {
+        const msg = document.querySelector('.lat-msg');
+        if (q.kind === 'mcq') {
+          if (k.sel === null) { msg.textContent = 'Pilih satu jawapan dahulu.'; return; }
+          k.ok = q.options[k.sel] === q.answer;
+        } else {
+          const v = [...document.querySelectorAll('[data-kz-in]')].map((el) => el.value.trim());
+          k.val = v;
+          if (v.some((x) => x === '' || !Number.isInteger(Number(x)))) { msg.textContent = 'Isi kedua-dua kotak dengan nombor bulat.'; return; }
+          k.ok = Number(v[0]) === q.answer[0] && Number(v[1]) === q.answer[1];
+        }
+      } else {
+        k.val = [...document.querySelectorAll('[data-kz-in]')].map((el) => el.value);
+        k.ok = false;
+      }
+      stopTimer();
+      k.checked = true; k.timedOut = !!timedOut;
+      k.by[item.topic][1]++;
+      if (k.ok) { k.score++; k.by[item.topic][0]++; state.stars++; save(state); }
+      rerender(false);
+    }
+
+    function next() {
+      if (k.i >= N_Q - 1) {
+        k.total = Math.round((Date.now() - k.t0) / 1000);
+        const b = state.kuizBest;
+        k.newBest = !b || k.score > b.score || (k.score === b.score && k.total < b.time);
+        if (k.newBest) { state.kuizBest = { score: k.score, time: k.total }; save(state); }
+        k.screen = 'done';
+        rerender(true);
+        return;
+      }
+      Object.assign(k, { i: k.i + 1, sel: null, val: ['', ''], checked: false, ok: false, timedOut: false });
+      rerender(true);
+      startTimer();
+    }
+
+    const correctText = (q) => q.kind === 'mcq' ? q.answer : q.kind === 'coord' ? `A′(${m(q.answer[0])}, ${m(q.answer[1])})` : `translasi ${vec(q.answer[0], q.answer[1])}`;
+
+    function renderStart() {
+      const b = state.kuizBest;
+      return `
+        ${head('Kuiz Pantas', 'Uji kefahaman anda bagi ketiga-tiga transformasi.', 'var(--green)')}
+        <div class="k-start">
+          <section class="card k-rules">
+            <h2>Peraturan</h2>
+            <ul class="k-list">
+              <li>${icon('check', 18)} <span><b>10 soalan</b> campuran Translasi, Pantulan dan Putaran</span></li>
+              <li>${icon('clock', 18)} <span><b>1 minit</b> bagi setiap soalan</span></li>
+              <li>${icon('star', 18)} <span><b>1 bintang</b> bagi setiap jawapan betul</span></li>
+              <li>${icon('pen', 18)} <span>Tiada petunjuk. Jawapan betul ditunjukkan selepas setiap soalan.</span></li>
+            </ul>
+            <button type="button" class="btn btn-primary k-go" data-kz="begin">Mula Kuiz ${icon('arrow')}</button>
+          </section>
+          <section class="card k-record">
+            <span class="k-rec-ico">${icon('trophy', 30)}</span>
+            <h2>Rekod Tertinggi</h2>
+            ${b ? `<div class="k-rec-score">${b.score}<small>/ ${N_Q}</small></div><p>Masa: ${fmt(b.time)}</p>` : '<div class="k-rec-score">–</div><p>Belum ada rekod. Jom cuba!</p>'}
+          </section>
+        </div>`;
+    }
+
+    function renderQuiz() {
+      const item = k.qs[k.i], q = item.q;
+      let ans;
+      if (q.kind === 'mcq') {
+        ans = `<div class="opts${q.options.length > 3 ? ' opts-col' : ''}">${q.options.map((o, i) => {
+          let cls = '';
+          if (k.checked) { if (o === q.answer) cls = ' right'; else if (i === k.sel) cls = ' wrong'; }
+          else if (i === k.sel) cls = ' sel';
+          return `<button type="button" class="opt${cls}" data-kz="sel" data-i="${i}" ${k.checked ? 'disabled' : ''}>${o}</button>`;
+        }).join('')}</div>`;
+      } else {
+        const dis = k.checked ? 'disabled' : '';
+        const f = (i, lbl) => `<label class="num-in"><span>${lbl}</span><input type="number" inputmode="numeric" step="1" data-kz-in="${i}" value="${k.val[i]}" ${dis} aria-label="${lbl}"></label>`;
+        ans = q.kind === 'coord'
+          ? `<div class="ans-row"><b class="ans-lbl">A′ (</b>${f(0, 'x')}<b class="ans-lbl">,</b>${f(1, 'y')}<b class="ans-lbl">)</b></div>`
+          : `<div class="ans-row"><span class="vec-in">${f(0, 'a')}${f(1, 'b')}</span></div>`;
+      }
+      const fb = k.checked
+        ? `<section class="feedback ${k.ok ? 'fb-ok' : 'fb-no'}"><h3>${k.ok ? `Betul! ${icon('star', 18)} +1` : k.timedOut ? 'Masa tamat!' : 'Salah'}</h3>${k.ok ? '' : `<p>Jawapan betul: <b>${correctText(q)}</b></p>`}</section>`
+        : '';
+      const left = k.checked ? k.left : SECS;
+      return `
+        <div class="lat-top">
+          <div class="lat-meta"><span class="eyebrow" style="color:var(--${item.topic})">Kuiz · ${TOPIC[item.topic]}</span><b>Soalan ${k.i + 1} / ${N_Q}</b></div>
+          <span class="pill pill-star">${icon('star', 16)} ${k.score}</span>
+          <span class="k-timer${left <= 15 ? ' low' : ''}${left <= 5 ? ' crit' : ''}" aria-label="Masa berbaki">${icon('clock', 18)} <b data-kz-timer>${left}</b>s</span>
+        </div>
+        <div class="bar lat-bar"><i data-kz-tbar style="width:${left / SECS * 100}%;background:var(--green);transition:width 1s linear"></i></div>
+        <div class="k-dots">${k.qs.map((_, i) => `<span class="${i < k.i ? 'done' : i === k.i ? 'now' : ''}"></span>`).join('')}</div>
+        <div class="lat-cols" style="--c:var(--${item.topic})">
+          <section class="card lat-q"><p class="q-text">${q.prompt}</p><div class="diagram">${q.svg}</div></section>
+          <section class="stack lat-a">
+            <h2 class="lat-h">Jawapan anda</h2>
+            ${ans}
+            ${fb}
+            <div class="lat-actions">
+              ${k.checked
+                ? `<button type="button" class="btn btn-primary lat-main" data-kz="next">${k.i === N_Q - 1 ? 'Lihat Keputusan' : 'Soalan Seterusnya'} ${icon('arrow')}</button>`
+                : `<button type="button" class="btn btn-primary lat-main" data-kz="check">Hantar Jawapan</button>`}
+            </div>
+            <p class="lat-msg" role="status" aria-live="polite"></p>
+          </section>
+        </div>`;
+    }
+
+    function renderDone() {
+      const pct = k.score / N_Q;
+      const msg = k.score === N_Q ? 'Sempurna! Anda pakar transformasi! 🏆' : pct >= 0.8 ? 'Cemerlang! 🎉' : pct >= 0.5 ? 'Bagus! Teruskan usaha.' : 'Jangan putus asa, cuba ulang kaji di Latihan! 💪';
+      const rows = Object.keys(TOPIC).filter((t) => k.by[t][1]).map((t) => {
+        const [c, n] = k.by[t];
+        return `<div class="k-row" style="--c:var(--${t})"><span>${TOPIC[t]}</span><div class="bar"><i style="width:${c / n * 100}%;background:var(--${t})"></i></div><b>${c}/${n}</b></div>`;
+      }).join('');
+      const weak = Object.keys(TOPIC).filter((t) => k.by[t][1] && k.by[t][0] / k.by[t][1] < 0.5).map((t) => TOPIC[t]);
+      return `
+        <div class="lat-done card" style="--c:var(--green)">
+          <span class="eyebrow" style="color:var(--green)">Keputusan Kuiz</span>
+          ${k.newBest ? `<span class="k-newbest">${icon('trophy', 16)} Rekod baharu!</span>` : ''}
+          <div class="big-score">${k.score}<small>/ ${N_Q}</small></div>
+          <p class="done-msg">${msg}</p>
+          <p class="muted-p">Masa: <b>${fmt(k.total)}</b> · Bintang diperoleh: <b>${k.score}</b> · Jumlah bintang: <b>${state.stars}</b></p>
+          <div class="k-break">${rows}</div>
+          ${weak.length ? `<div class="notice notice-amber" style="text-align:left"><span class="ico">${icon('pen')}</span><p>Cadangan: ulang kaji <b>${weak.length > 1 ? weak.slice(0, -1).join(', ') + ' dan ' + weak[weak.length - 1] : weak[0]}</b> di bahagian Latihan.</p></div>` : ''}
+          <div class="done-actions">
+            <button type="button" class="btn btn-primary" data-kz="begin">Cuba Lagi</button>
+            <a href="#/latihan" class="btn btn-ghost">Ulang Kaji di Latihan</a>
+          </div>
+        </div>`;
+    }
+
+    function render() { return k.screen === 'quiz' ? renderQuiz() : k.screen === 'done' ? renderDone() : renderStart(); }
+    function rerender(top) {
+      document.getElementById('view').innerHTML = render();
+      if (top) window.scrollTo(0, 0);
+    }
+
+    function onClick(e) {
+      const el = e.target.closest('[data-kz]');
+      if (!el) return false;
+      const act = el.dataset.kz;
+      if (act === 'begin') begin();
+      else if (act === 'sel' && !k.checked) {
+        k.sel = Number(el.dataset.i);
+        document.querySelectorAll('[data-kz="sel"]').forEach((b, i) => b.classList.toggle('sel', i === k.sel));
+      }
+      else if (act === 'check') answer(false);
+      else if (act === 'next') next();
+      return true;
+    }
+    function onKey(e) { if (e.key === 'Enter' && e.target.matches('[data-kz-in]') && !k.checked) { e.preventDefault(); answer(false); } }
+    // dipanggil setiap kali halaman bertukar
+    function onRoute(name) {
+      if (name !== 'kuiz') { if (k.screen === 'quiz') { stopTimer(); k = { screen: 'start' }; } }
+      else if (k.screen === 'done') k = { screen: 'start' };
+    }
+    return { render, onClick, onKey, onRoute };
   })();
 
   function soon(title, sub, c, ic, msg, chips) {
@@ -659,6 +865,7 @@
     const r = (location.hash.replace(/^#\/?/, '') || 'splash');
     const name = VIEWS[r] ? r : 'splash';
     if (name === 'latihan') Lat.reset();
+    Kuiz.onRoute(name);
     const view = document.getElementById('view');
     view.innerHTML = VIEWS[name]();
     document.body.classList.toggle('fullscreen', FULLSCREEN.includes(name));
@@ -676,6 +883,7 @@
   /* ---------- Interaksi ---------- */
   document.addEventListener('click', (e) => {
     if (Lat.onClick(e)) return;
+    if (Kuiz.onClick(e)) return;
     const tab = e.target.closest('[data-tab]');
     if (tab) {
       const box = tab.closest('.stack');
@@ -689,7 +897,7 @@
     }
   });
 
-  document.addEventListener('keydown', (e) => Lat.onKey(e));
+  document.addEventListener('keydown', (e) => { Lat.onKey(e); Kuiz.onKey(e); });
 
   function toast(msg) {
     const t = document.getElementById('toast');

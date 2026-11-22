@@ -11,7 +11,7 @@ App pembelajaran **Transformasi Isometri** (Matematik Tingkatan 2, Bab 11): Tran
 - [x] Fasa 2: Simulasi Translasi, Pantulan, Putaran
 - [x] Fasa 3: Nota
 - [x] Fasa 4: Latihan interaktif
-- [ ] Fasa 5: Kuiz
+- [x] Fasa 5: Kuiz
 
 ## Struktur fail
 | Fail | Fungsi |
