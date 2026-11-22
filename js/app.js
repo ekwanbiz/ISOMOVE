@@ -128,7 +128,7 @@
     },
 
     simulasi() {
-      const READY = { translasi: 'simulasi/translasi.html' };
+      const READY = { translasi: 'simulasi/translasi.html', pantulan: 'simulasi/pantulan.html' };
       const sc = (k, title, desc) => `<section class="card sim-card" style="--c:var(--${k})"><div class="diagram">${DIAG[k]()}</div><h2>${title}</h2><p>${desc}</p>${READY[k]
         ? `<a href="${READY[k]}" class="btn sim-open">Buka Simulasi ${icon('arrow', 18)}</a>`
         : `<span class="badge">${icon('clock', 14)} Akan dimasukkan</span>`}</section>`;
