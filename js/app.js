@@ -250,7 +250,17 @@
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => { /* abaikan */ });
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .then((reg) => reg.update())
+        .catch(() => { /* abaikan */ });
+      // Bila versi baharu app dipasang, muat semula sekali secara automatik
+      let reloaded = false;
+      const hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController || reloaded) return;
+        reloaded = true;
+        location.reload();
+      });
     });
   }
   window.addEventListener('offline', () => toast('Tiada internet – ISOMOVE masih boleh digunakan.'));
