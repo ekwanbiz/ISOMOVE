@@ -82,6 +82,23 @@
   const head = (title, sub, accent, right = '') =>
     `<header class="page-head" style="--accent:${accent}"><div><span class="eyebrow">ISOMOVE</span><h1>${title}</h1><p>${sub}</p></div>${right}</header>`;
 
+  const FXN = { play() {}, stars() {}, celebrate() {}, bump() {}, shake() {}, button: () => '' };
+  const fx = () => window.FX || FXN;
+  // selepas paparan dikemas kini: bunyi + bintang ikut keputusan jawapan
+  function feedbackFx(ok) {
+    const h = document.querySelector('.feedback h3'), fb = document.querySelector('.feedback');
+    if (ok) { fx().play('betul'); fx().stars(h || fb, 14); fx().bump(document.querySelector('.lat-top .pill-star')); }
+    else { fx().play('salah'); fx().shake(fb); }
+  }
+  function doneFx(good) {
+    // bintang keputusan "muncul" satu demi satu
+    document.querySelectorAll('.stars-row span.on').forEach((el, i) => {
+      if (el.animate) el.animate([{ transform: 'scale(0) rotate(-90deg)', opacity: 0 }, { transform: 'scale(1.4) rotate(10deg)', opacity: 1, offset: 0.6 }, { transform: 'scale(1) rotate(0)', opacity: 1 }], { duration: 450, delay: 250 + i * 160, easing: 'ease-out', fill: 'backwards' });
+    });
+    if (good) { fx().play('menang'); fx().stars(document.querySelector('.big-score'), 18); setTimeout(() => fx().celebrate(), 200); }
+    else fx().play('tamat');
+  }
+
   const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
@@ -523,7 +540,7 @@
         return `<section class="card lat-topic" style="--c:var(--${k})"><div class="lat-topic-head"><span class="icon-box">${icon(k === 'translasi' ? 'tr' : k === 'pantulan' ? 'pa' : 'pu', 24)}</span><div><h2>${TOPICS[k]}</h2><p>${b === undefined ? 'Belum dicuba' : `Terbaik: ${b}/${N_Q} · Set lulus: ${n}`}</p></div></div><button type="button" class="btn lat-start" data-lat="start" data-topic="${k}">Mula Latihan ${icon('arrow', 18)}</button></section>`;
       };
       return `
-        ${head('Latihan', 'Pilih topik. Setiap set ada 5 soalan rawak.', 'var(--amber)', `<span class="pill pill-star">${icon('star', 16)} ${state.stars}</span>`)}
+        ${head('Latihan', 'Pilih topik. Setiap set ada 5 soalan rawak.', 'var(--amber)', `<div class="head-tools">${fx().button()}<span class="pill pill-star">${icon('star', 16)} ${state.stars}</span></div>`)}
         <div class="stack">
           <div class="lat-grid">${card('translasi')}${card('pantulan')}${card('putaran')}</div>
           <div class="notice notice-amber"><span class="ico">${icon('star')}</span><p>Setiap jawapan betul memberi <b>1 bintang</b>. Dapatkan sekurang-kurangnya <b>3/5</b> untuk lulus satu set.</p></div>
@@ -556,6 +573,7 @@
           <button type="button" class="back" data-lat="menu" aria-label="Kembali ke menu latihan">${icon('back')}</button>
           <div class="lat-meta"><span class="eyebrow" style="color:var(--${s.topic})">Latihan · ${TOPICS[s.topic]}</span><b>Soalan ${s.i + 1} / ${N_Q}</b></div>
           <span class="pill pill-star">${icon('star', 16)} ${s.score}</span>
+          ${fx().button()}
         </div>
         <div class="bar lat-bar"><i style="width:${(s.i + (s.checked ? 1 : 0)) / N_Q * 100}%;background:var(--${s.topic})"></i></div>
         <div class="lat-cols" style="--c:var(--${s.topic})">
@@ -614,6 +632,7 @@
       s.checked = true;
       if (s.ok) { s.score++; state.stars++; save(state); }
       rerender(false);
+      feedbackFx(s.ok);
       const fbEl = document.querySelector('.feedback');
       if (fbEl) fbEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -624,13 +643,14 @@
       const act = el.dataset.lat;
       if (act === 'start') { start(el.dataset.topic); rerender(true); }
       else if (act === 'menu') { s.screen = 'menu'; rerender(true); }
-      else if (act === 'sel' && !s.checked) { s.sel = Number(el.dataset.i); rerender(false); }
+      else if (act === 'sel' && !s.checked) { s.sel = Number(el.dataset.i); fx().play('ketik'); rerender(false); }
       else if (act === 'hint') { s.val = [...document.querySelectorAll('[data-lat-in]')].map((x) => x.value); s.hint = true; rerender(false); }
       else if (act === 'check') check();
       else if (act === 'next') {
         if (s.i >= N_Q - 1) finish();
         else Object.assign(s, { i: s.i + 1, sel: null, checked: false, ok: false, hint: false, val: ['', ''] });
         rerender(true);
+        if (s.screen === 'done') doneFx(s.score >= 3); else fx().play('ketik');
       }
       return true;
     }
@@ -675,6 +695,7 @@
           const bar = document.querySelector('[data-kz-tbar]');
           if (bar) bar.style.width = (k.left / SECS * 100) + '%';
         }
+        if (k.left > 0 && k.left <= 5) fx().play('detik');
         if (k.left <= 0) { stopTimer(); answer(true); }
       }, 1000);
     }
@@ -708,6 +729,7 @@
       k.by[item.topic][1]++;
       if (k.ok) { k.score++; k.by[item.topic][0]++; state.stars++; save(state); }
       rerender(false);
+      if (timedOut) { fx().play('tamat'); fx().shake(document.querySelector('.feedback')); } else feedbackFx(k.ok);
     }
 
     function next() {
@@ -715,6 +737,7 @@
         k.total = Math.round((Date.now() - k.t0) / 1000);
         k.screen = 'done';
         rerender(true);
+        doneFx(k.score / N_Q >= 0.5);
         return;
       }
       Object.assign(k, { i: k.i + 1, sel: null, val: ['', ''], checked: false, ok: false, timedOut: false });
@@ -726,7 +749,7 @@
 
     function renderStart() {
       return `
-        ${head('Kuiz Pantas', 'Uji kefahaman anda bagi ketiga-tiga transformasi.', 'var(--green)')}
+        ${head('Kuiz Pantas', 'Uji kefahaman anda bagi ketiga-tiga transformasi.', 'var(--green)', `<div class="head-tools">${fx().button()}</div>`)}
         <div class="k-start">
           <section class="card k-rules">
             <h2>Peraturan</h2>
@@ -767,6 +790,7 @@
           <div class="lat-meta"><span class="eyebrow" style="color:var(--${item.topic})">Kuiz · ${TOPIC[item.topic]}</span><b>Soalan ${k.i + 1} / ${N_Q}</b></div>
           <span class="pill pill-star">${icon('star', 16)} ${k.score}</span>
           <span class="k-timer${left <= 15 ? ' low' : ''}${left <= 5 ? ' crit' : ''}" aria-label="Masa berbaki">${icon('clock', 18)} <b data-kz-timer>${left}</b>s</span>
+          ${fx().button()}
         </div>
         <div class="bar lat-bar"><i data-kz-tbar style="width:${left / SECS * 100}%;background:var(--green);transition:width 1s linear"></i></div>
         <div class="k-dots">${k.qs.map((_, i) => `<span class="${i < k.i ? 'done' : i === k.i ? 'now' : ''}"></span>`).join('')}</div>
@@ -822,6 +846,7 @@
       if (act === 'begin') begin();
       else if (act === 'sel' && !k.checked) {
         k.sel = Number(el.dataset.i);
+        fx().play('ketik');
         document.querySelectorAll('[data-kz="sel"]').forEach((b, i) => b.classList.toggle('sel', i === k.sel));
       }
       else if (act === 'check') answer(false);

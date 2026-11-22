@@ -375,3 +375,11 @@ a.tile:active { transform: scale(0.97); background: color-mix(in srgb, var(--c) 
 
 .lat-start { width: 100%; min-height: 52px; background: var(--c); color: var(--bg); font-family: var(--head); font-size: 17px; }
 .lat-start:hover { filter: brightness(1.12); }
+
+/* Butang bunyi */
+.head-tools { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 440px) {
+  .lat-top { gap: 8px; }
+  .lat-top .k-timer { padding: 8px 10px; }
+  .lat-top .snd-btn { width: 40px; height: 40px; min-height: 40px; border-radius: 12px; }
+}
