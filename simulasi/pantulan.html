@@ -71,10 +71,10 @@ input[type=range]{accent-color:var(--accent)}
 @media(max-width:440px){.top{margin:0 -10px 14px;padding-left:10px;padding-right:10px}.wrap{padding-top:0}}
 @media(max-width:420px){.top h1{font-size:22px}.top p{display:none}}
 .top-snd{margin-left:auto;flex:none}
-/* Amaran kecil di penjuru kiri atas grid */
-.canvasbox .warning{top:8px;left:8px;transform:none;max-width:min(60%,240px);width:auto;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:700;line-height:1.3;text-align:left;box-shadow:0 2px 8px rgba(0,0,0,.35);opacity:.95;animation:warnin .2s ease-out}
-@keyframes warnin{from{opacity:0}to{opacity:.95}}
-@media(prefers-reduced-motion:reduce){.canvasbox .warning{animation:none}}
+/* Amaran: satu baris kecil di luar grid, kiri atas (ganti teks petunjuk) */
+.a-canvas .warning{position:static;display:block;transform:none;width:max-content;max-width:100%;margin:0 0 8px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;line-height:1.4;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:none;opacity:1;animation:none}
+.a-canvas .warning:empty{display:none}
+.a-canvas:has(.warning:not(:empty)) .hint{display:none}
 </style>
 </head>
 <body>
@@ -91,7 +91,7 @@ input[type=range]{accent-color:var(--accent)}
 </section>
 <div class="a-canvas">
 <p class="hint">Klik grid atau seret bentuk biru — bucu terkunci pada grid</p>
-<div class="canvasbox"><div id="movewarning" class="warning" role="alert" aria-live="assertive"></div><svg id="svg" viewBox="0 0 600 440" aria-label="Grid Cartes dan animasi pantulan"><rect width="600" height="440" fill="#0B1220"/><g id="grid"></g><g id="refaxis"></g><g id="original"></g><g id="rays"></g><g id="image"></g><g id="effects"></g><rect id="hit" width="600" height="440" fill="transparent" style="cursor:crosshair;touch-action:none"/></svg></div>
+<div id="movewarning" class="warning" role="alert" aria-live="assertive"></div><div class="canvasbox"><svg id="svg" viewBox="0 0 600 440" aria-label="Grid Cartes dan animasi pantulan"><rect width="600" height="440" fill="#0B1220"/><g id="grid"></g><g id="refaxis"></g><g id="original"></g><g id="rays"></g><g id="image"></g><g id="effects"></g><rect id="hit" width="600" height="440" fill="transparent" style="cursor:crosshair;touch-action:none"/></svg></div>
 <div class="legend"><span><i style="background:#38BDF8"></i>Bentuk asal</span><span><i style="background:#C084FC"></i>Garis pantulan</span><span><i style="background:#34D399"></i>Ke garis</span><span><i style="background:repeating-linear-gradient(90deg,#FB923C 0 4px,transparent 4px 6px);border-radius:2px;width:16px;height:4px"></i>Ke imej</span><span><i style="background:#F472B6"></i>Imej</span></div>
 </div>
 <section class="panel a-player">
@@ -202,7 +202,7 @@ let dragging=false,offset=[0,0],activePointer=null;
 function centroid(){let sx=0,sy=0;template.forEach(p=>{sx+=p[0];sy+=p[1]});return [sx/template.length,sy/template.length]}
 function coords(e){let r=svg.getBoundingClientRect();return [((e.clientX-r.left)/r.width*600-OX)/S,(OY-(e.clientY-r.top)/r.height*440)/S]}
 function insideShape(pos){let poly=template.map(p=>[p[0]+anchor[0],p[1]+anchor[1]]),inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){let u=poly[i],v=poly[j];if((u[1]>pos[1])!==(v[1]>pos[1])&&pos[0]<(v[0]-u[0])*(pos[1]-u[1])/(v[1]-u[1])+u[0])inside=!inside}return inside}
-function placeAt(pos){let q=[Math.round(pos[0]),Math.round(pos[1])];if(fits(q)){warning.textContent='';if(q[0]!==anchor[0]||q[1]!==anchor[1]){anchor=q;setup()}}else warning.textContent='⚠ Di luar kawasan dibenarkan! Bentuk asal dan imej pantulan mesti berada dalam grid.'}
+function placeAt(pos){let q=[Math.round(pos[0]),Math.round(pos[1])];if(fits(q)){warning.textContent='';if(q[0]!==anchor[0]||q[1]!==anchor[1]){anchor=q;setup()}}else warning.textContent='⚠ Di luar grid'}
 hit.addEventListener('pointerdown',e=>{if(!valid)return;let pos=coords(e);dragging=true;activePointer=e.pointerId;if(insideShape(pos)){offset=[anchor[0]-pos[0],anchor[1]-pos[1]]}else{let c=centroid();offset=[-c[0],-c[1]];placeAt([pos[0]+offset[0],pos[1]+offset[1]])}try{hit.setPointerCapture(e.pointerId)}catch(err){}e.preventDefault()});
 hit.addEventListener('pointermove',e=>{if(!dragging||e.pointerId!==activePointer)return;let p=coords(e);placeAt([p[0]+offset[0],p[1]+offset[1]])});
 function endDrag(e){if(e.pointerId===activePointer){dragging=false;activePointer=null}}
