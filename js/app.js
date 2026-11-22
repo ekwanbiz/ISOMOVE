@@ -143,8 +143,78 @@
         </div>`;
     },
 
-    nota: () => soon('Nota', 'Fahami konsep sebelum mencuba simulasi.', 'var(--translasi)', 'book',
-      'Nota Translasi, Pantulan dan Putaran akan dimasukkan di sini.', ['Definisi', 'Rajah pada grid', 'Sifat isometri']),
+    nota() {
+      const m = (v) => String(v).replace('-', '−');
+      const vec = (a, b) => `<span class="vec" aria-label="vektor ${m(a)}, ${m(b)}"><span>${m(a)}</span><span>${m(b)}</span></span>`;
+      const prop = (label, val, ok) => `<li class="prop ${ok ? 'ok' : 'chg'}"><span class="prop-ico">${icon(ok ? 'check' : 'pu', 16)}</span><span><b>${label}</b><small>${val}</small></span></li>`;
+      const block = (k, data) => `
+        <div class="nota-panel" data-panel="${k}" style="--c:var(--${k})" ${k === 'translasi' ? '' : 'hidden'}>
+          <div class="nota-cols">
+            <div class="stack">
+              <section class="card nota-sec"><h2>Definisi</h2><p>${data.def}</p></section>
+              <section class="card nota-sec"><h2>Cara Menyatakan</h2>${data.cara}</section>
+              <section class="card nota-sec"><h2>Sifat</h2><ul class="props">${data.sifat}</ul>${data.extra ? `<ul class="bul">${data.extra}</ul>` : ''}</section>
+            </div>
+            <div class="stack">
+              <section class="card nota-sec"><h2>Rajah</h2><div class="diagram">${DIAG[k]()}</div><p class="cap">${data.cap}</p></section>
+              <section class="card nota-sec"><h2>Contoh</h2>${data.contoh}</section>
+              <section class="card nota-sec warn"><h2>Kesilapan Biasa</h2><ul class="bul">${data.silap}</ul></section>
+              <a href="simulasi/${k}.html" class="btn nota-go">Cuba Simulasi ${data.title} ${icon('arrow', 18)}</a>
+            </div>
+          </div>
+        </div>`;
+      const T = {
+        translasi: {
+          title: 'Translasi',
+          def: '<b>Translasi</b> ialah pemindahan semua titik pada suatu objek dengan <b>jarak dan arah yang sama</b>.',
+          cara: `<p>Translasi diwakili oleh <b>vektor translasi</b>:</p>
+            <div class="formula">${vec('a', 'b')}</div>
+            <ul class="bul"><li><b>a</b>: gerakan mengufuk (+ ke kanan, − ke kiri)</li><li><b>b</b>: gerakan mencancang (+ ke atas, − ke bawah)</li></ul>
+            <p class="eg">Contoh: Translasi ${vec(4, 1)} bermaksud 4 unit ke kanan, 1 unit ke atas.</p>`,
+          sifat: prop('Bentuk', 'Sama', true) + prop('Saiz', 'Sama', true) + prop('Orientasi', 'Sama', true),
+          cap: "Objek P ditranslasikan 4 unit ke kanan dan 1 unit ke atas kepada imej P′.",
+          contoh: `<p class="q">Titik A(2, 3) ditranslasikan oleh ${vec(-4, 5)}. Cari koordinat imej A′.</p>
+            <ol class="steps-sol"><li>Tambah <b>a</b> pada koordinat-x: 2 + (−4) = −2</li><li>Tambah <b>b</b> pada koordinat-y: 3 + 5 = 8</li></ol>
+            <p class="ans">Jawapan: <b>A′(−2, 8)</b></p>`,
+          silap: '<li>Tertukar nilai <b>a</b> dan <b>b</b> dalam vektor.</li><li>Lupa tanda negatif: ke <b>kiri</b> dan ke <b>bawah</b> ialah negatif.</li><li>Mengira petak dari titik objek yang berbeza dengan titik imej yang sepadan.</li>'
+        },
+        pantulan: {
+          title: 'Pantulan',
+          def: '<b>Pantulan</b> ialah transformasi yang memantulkan semua titik pada suatu objek pada satu garis yang dipanggil <b>paksi pantulan</b> (garis pantulan).',
+          cara: `<p>Nyatakan <b>persamaan garis pantulan</b>:</p>
+            <ul class="bul"><li><b>x = a</b>: garis menegak (contoh: x = 4)</li><li><b>y = b</b>: garis mengufuk (contoh: y = −1)</li><li><b>paksi-x</b> (y = 0) atau <b>paksi-y</b> (x = 0)</li><li><b>y = x</b> atau <b>y = −x</b>: garis condong</li></ul>
+            <p class="eg">Contoh: Pantulan pada garis x = 4.</p>`,
+          sifat: prop('Bentuk', 'Sama', true) + prop('Saiz', 'Sama', true) + prop('Orientasi', 'Songsang (terbalik)', false),
+          extra: '<li>Titik dan imejnya berada pada <b>jarak yang sama</b> dari paksi pantulan.</li><li>Garis yang menyambungkan titik dan imejnya <b>berserenjang</b> dengan paksi pantulan.</li><li>Titik pada paksi pantulan <b>tidak berubah</b>.</li>',
+          cap: 'Objek P dipantulkan pada garis x = 4 kepada imej P′.',
+          contoh: `<p class="q">Titik B(1, 2) dipantulkan pada garis x = 4. Cari koordinat imej B′.</p>
+            <ol class="steps-sol"><li>Jarak B ke garis x = 4: 4 − 1 = 3 unit</li><li>B′ berada 3 unit di sebelah lain garis: 4 + 3 = 7</li><li>Koordinat-y tidak berubah kerana garis pantulan menegak.</li></ol>
+            <p class="ans">Jawapan: <b>B′(7, 2)</b></p>`,
+          silap: '<li>Mengira jarak dari <b>paksi-y</b>, bukan dari garis pantulan.</li><li>Keliru <b>x = a</b> (garis menegak) dengan <b>y = b</b> (garis mengufuk).</li><li>Mengubah koordinat yang sepatutnya kekal.</li>'
+        },
+        putaran: {
+          title: 'Putaran',
+          def: '<b>Putaran</b> ialah transformasi yang memutarkan semua titik pada suatu objek pada satu titik tetap (<b>pusat putaran</b>) melalui suatu <b>sudut</b> dan <b>arah</b> tertentu.',
+          cara: `<p>Nyatakan <b>3 perkara</b>:</p>
+            <ul class="bul"><li><b>Pusat putaran</b>, contoh: (4, 1)</li><li><b>Sudut putaran</b>, contoh: 90°, 180°, 270°</li><li><b>Arah</b>: ikut arah jam ↻ atau lawan arah jam ↺</li></ul>
+            <p class="eg">Contoh: Putaran 90° lawan arah jam pada pusat (4, 1).</p>`,
+          sifat: prop('Bentuk', 'Sama', true) + prop('Saiz', 'Sama', true) + prop('Orientasi', 'Berubah (berpusing, tidak terbalik)', false),
+          extra: '<li>Jarak setiap titik dari pusat putaran <b>kekal sama</b>.</li><li>Pusat putaran ialah satu-satunya titik yang <b>tidak berubah</b>.</li><li>90° ikut arah jam = 270° lawan arah jam. Putaran 180° memberi imej yang sama bagi kedua-dua arah.</li>',
+          cap: 'Objek P diputarkan 90° lawan arah jam pada pusat C(4, 1) kepada imej P′.',
+          contoh: `<p class="q">Titik Q(3, 1) diputarkan 90° lawan arah jam pada asalan O(0, 0). Cari koordinat imej Q′.</p>
+            <ol class="steps-sol"><li>Dari O, Q berada 3 unit ke kanan dan 1 unit ke atas.</li><li>Selepas putaran 90° lawan arah jam: 3 unit ke kanan menjadi 3 unit ke <b>atas</b>, 1 unit ke atas menjadi 1 unit ke <b>kiri</b>.</li></ol>
+            <p class="ans">Jawapan: <b>Q′(−1, 3)</b></p>`,
+          silap: '<li>Keliru <b>ikut arah jam</b> dengan <b>lawan arah jam</b>.</li><li>Lupa menyatakan <b>pusat putaran</b> dalam jawapan.</li><li>Memutarkan pada asalan O walaupun pusat putaran ialah titik lain.</li>'
+        }
+      };
+      const tab = (k, l) => `<button type="button" role="tab" aria-selected="${k === 'translasi'}" data-tab="${k}" style="--c:var(--${k})">${l}</button>`;
+      return `
+        ${head('Nota', 'Fahami konsep sebelum mencuba simulasi.', 'var(--translasi)')}
+        <div class="stack">
+          <div class="tabs" role="tablist" aria-label="Pilih transformasi">${tab('translasi', 'Translasi')}${tab('pantulan', 'Pantulan')}${tab('putaran', 'Putaran')}</div>
+          ${block('translasi', T.translasi)}${block('pantulan', T.pantulan)}${block('putaran', T.putaran)}
+        </div>`;
+    },
     latihan: () => soon('Latihan', 'Pilih tahap dan jawab soalan.', 'var(--amber)', 'pen',
       'Latihan interaktif dengan semakan jawapan akan dimasukkan di sini.', ['Mudah', 'Sederhana', 'Sukar']),
     kuiz: () => soon('Kuiz Pantas', 'Uji kefahaman dan kumpul bintang.', 'var(--green)', 'trophy',
@@ -221,8 +291,8 @@
     const tab = e.target.closest('[data-tab]');
     if (tab) {
       const box = tab.closest('.stack');
-      box.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b === tab)));
-      box.querySelectorAll('[data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== tab.dataset.tab; });
+      box.querySelectorAll(':scope > .tabs [data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b === tab)));
+      box.querySelectorAll(':scope > [data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== tab.dataset.tab; });
       return;
     }
     if (e.target.closest('[data-install]') && deferredPrompt) {
