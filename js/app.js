@@ -215,8 +215,7 @@
           ${block('translasi', T.translasi)}${block('pantulan', T.pantulan)}${block('putaran', T.putaran)}
         </div>`;
     },
-    latihan: () => soon('Latihan', 'Pilih tahap dan jawab soalan.', 'var(--amber)', 'pen',
-      'Latihan interaktif dengan semakan jawapan akan dimasukkan di sini.', ['Mudah', 'Sederhana', 'Sukar']),
+    latihan: () => Lat.render(),
     kuiz: () => soon('Kuiz Pantas', 'Uji kefahaman dan kumpul bintang.', 'var(--green)', 'trophy',
       'Kuiz 10 soalan dengan pemasa akan dimasukkan di sini.', ['10 soalan', 'Pemasa', 'Rekod markah']),
 
@@ -257,6 +256,393 @@
     }
   };
 
+  /* ===================== LATIHAN ===================== */
+  const Lat = (() => {
+    const TOPICS = { translasi: 'Translasi', pantulan: 'Pantulan', putaran: 'Putaran' };
+    const LEVELS = { mudah: 'Mudah', sederhana: 'Sederhana', sukar: 'Sukar' };
+    const N_Q = 5;
+    const XMIN = -6, XMAX = 6, YMIN = -5, YMAX = 5;
+    const C = { obj: '#38BDF8', img: '#F472B6', line: '#C084FC', ctr: '#FBBF24', grid: '#1C2A42', axis: '#64748B', num: '#94A3B8', text: '#E6EDF7' };
+    const L3 = ['A', 'B', 'C'];
+
+    /* ---- utiliti ---- */
+    const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const shuffle = (arr) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const m = (v) => String(v).replace('-', '−');
+    const pt = (p) => `(${m(p[0])}, ${m(p[1])})`;
+    const inRange = (p) => p[0] >= XMIN && p[0] <= XMAX && p[1] >= YMIN && p[1] <= YMAX;
+    const allIn = (...sets) => sets.every((s) => s.every(inRange));
+    const same = (p, q) => p[0] === q[0] && p[1] === q[1];
+    const vec = (a, b) => `<span class="vec"><span>${m(a)}</span><span>${m(b)}</span></span>`;
+
+    /* ---- transformasi ---- */
+    const tr = (p, a, b) => [p[0] + a, p[1] + b];
+    const refl = (p, ln) => ln.k === 'x' ? [2 * ln.v - p[0], p[1]] : ln.k === 'y' ? [p[0], 2 * ln.v - p[1]] : ln.k === 'd' ? [p[1], p[0]] : [-p[1], -p[0]];
+    // sudut ccw: 90, 180, 270
+    const rot = (p, c, ang) => {
+      const dx = p[0] - c[0], dy = p[1] - c[1];
+      const r = ang === 90 ? [-dy, dx] : ang === 180 ? [-dx, -dy] : [dy, -dx];
+      return [c[0] + r[0], c[1] + r[1]];
+    };
+    const lineName = (ln) => ln.k === 'x' ? (ln.v === 0 ? 'paksi-y (x = 0)' : `x = ${m(ln.v)}`) : ln.k === 'y' ? (ln.v === 0 ? 'paksi-x (y = 0)' : `y = ${m(ln.v)}`) : ln.k === 'd' ? 'y = x' : 'y = −x';
+    const lineDist = (p, ln) => ln.k === 'x' ? Math.abs(p[0] - ln.v) : ln.k === 'y' ? Math.abs(p[1] - ln.v) : null;
+    const rotName = (r) => r.ang === 180 ? '180°' : `90° ${r.dir === 'ccw' ? 'lawan arah jam' : 'ikut arah jam'}`;
+    const rotAng = (r) => r.ang === 180 ? 180 : r.dir === 'ccw' ? 90 : 270;
+
+    /* ---- bentuk rawak (segi tiga bersudut tegak tak simetri) ---- */
+    const LEGS = [[2, 3], [3, 2], [1, 2], [2, 1], [3, 1], [1, 3]];
+    function shape() {
+      const [w, h] = pick(LEGS), sx = pick([1, -1]), sy = pick([1, -1]);
+      const o = [rnd(XMIN + 3, XMAX - 3), rnd(YMIN + 3, YMAX - 3)];
+      return [[o[0], o[1]], [o[0] + w * sx, o[1]], [o[0], o[1] + h * sy]];
+    }
+    const overlaps = (P, Q) => P.some((p) => Q.some((q) => same(p, q)));
+
+    /* ---- rajah ---- */
+    function diagram(o) {
+      const U = 26, pad = 18, W = (XMAX - XMIN) * U + pad * 2, H = (YMAX - YMIN) * U + pad * 2;
+      const X = (x) => pad + (x - XMIN) * U, Y = (y) => pad + (YMAX - y) * U;
+      let s = '';
+      for (let x = XMIN; x <= XMAX; x++) s += `<line x1="${X(x)}" y1="${Y(YMIN)}" x2="${X(x)}" y2="${Y(YMAX)}" stroke="${x === 0 ? C.axis : C.grid}" stroke-width="${x === 0 ? 1.6 : 1}"/>`;
+      for (let y = YMIN; y <= YMAX; y++) s += `<line x1="${X(XMIN)}" y1="${Y(y)}" x2="${X(XMAX)}" y2="${Y(y)}" stroke="${y === 0 ? C.axis : C.grid}" stroke-width="${y === 0 ? 1.6 : 1}"/>`;
+      for (let x = XMIN; x <= XMAX; x++) if (x) s += `<text x="${X(x)}" y="${Y(0) + 13}" fill="${C.num}" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">${m(x)}</text>`;
+      for (let y = YMIN; y <= YMAX; y++) if (y) s += `<text x="${X(0) - 5}" y="${Y(y) + 3}" fill="${C.num}" font-size="9" text-anchor="end" font-family="Inter, sans-serif">${m(y)}</text>`;
+      s += `<text x="${X(0) - 5}" y="${Y(0) + 13}" fill="${C.num}" font-size="9" text-anchor="end" font-family="Inter, sans-serif">0</text>`;
+      if (o.line) {
+        const ln = o.line;
+        let a, b;
+        if (ln.k === 'x') { a = [ln.v, YMIN]; b = [ln.v, YMAX]; }
+        else if (ln.k === 'y') { a = [XMIN, ln.v]; b = [XMAX, ln.v]; }
+        else if (ln.k === 'd') { a = [YMIN, YMIN]; b = [YMAX, YMAX]; }
+        else { a = [-YMAX, YMAX]; b = [-YMIN, YMIN]; }
+        s += `<line x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(b[0])}" y2="${Y(b[1])}" stroke="${C.line}" stroke-width="2.5" stroke-dasharray="8 6"/>`;
+        if (o.lineLabel) s += `<text x="${X(b[0]) + (ln.k === 'x' ? 5 : -4)}" y="${Y(b[1]) + (ln.k === 'x' ? 12 : -5)}" fill="${C.line}" font-size="12" font-weight="700" text-anchor="${ln.k === 'x' ? 'start' : 'end'}" font-family="Inter, sans-serif">${lineName(ln)}</text>`;
+      }
+      const poly = (P, col, dash, names) => {
+        let r = `<polygon points="${P.map((p) => X(p[0]) + ',' + Y(p[1])).join(' ')}" fill="${col}" fill-opacity="0.2" stroke="${col}" stroke-width="2.5" stroke-linejoin="round"${dash ? ' stroke-dasharray="6 4"' : ''}/>`;
+        const cx = P.reduce((t, p) => t + p[0], 0) / P.length, cy = P.reduce((t, p) => t + p[1], 0) / P.length;
+        P.forEach((p, i) => {
+          const dx = p[0] - cx, dy = p[1] - cy, len = Math.hypot(dx, dy) || 1;
+          r += `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="3.5" fill="${col}"/>`;
+          r += `<text x="${X(p[0]) + dx / len * 13}" y="${Y(p[1]) - dy / len * 13 + 4}" fill="${C.text}" font-size="12" font-weight="700" text-anchor="middle" font-family="Inter, sans-serif">${names[i]}</text>`;
+        });
+        return r;
+      };
+      if (o.obj) s += poly(o.obj, C.obj, false, L3);
+      if (o.img) s += poly(o.img, C.img, true, L3.map((l) => l + '′'));
+      (o.points || []).forEach((q) => {
+        s += `<circle cx="${X(q.p[0])}" cy="${Y(q.p[1])}" r="5" fill="${q.col}"/>`;
+        s += `<text x="${X(q.p[0]) + 8}" y="${Y(q.p[1]) - 7}" fill="${C.text}" font-size="12" font-weight="700" font-family="Inter, sans-serif">${q.label}</text>`;
+      });
+      if (o.center) {
+        s += `<circle cx="${X(o.center[0])}" cy="${Y(o.center[1])}" r="5.5" fill="${C.ctr}" stroke="#0B1220" stroke-width="2"/>`;
+        s += `<text x="${X(o.center[0]) + 8}" y="${Y(o.center[1]) + 15}" fill="${C.ctr}" font-size="12" font-weight="700" font-family="Inter, sans-serif">${o.centerLabel || 'C'}</text>`;
+      }
+      return `<svg width="100%" viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.aria || 'Rajah pada grid'}" style="display:block">${s}</svg>`;
+    }
+
+    /* ---- penjana soalan ---- */
+    function tryGen(fn) { for (let i = 0; i < 400; i++) { const q = fn(); if (q) return q; } return null; }
+
+    // MUDAH: kenal pasti jenis transformasi
+    function genMudah(topic) {
+      const type = Math.random() < 0.5 ? topic : pick(Object.keys(TOPICS).filter((t) => t !== topic));
+      return tryGen(() => {
+        const P = shape();
+        let Q, why;
+        if (type === 'translasi') {
+          const a = rnd(-5, 5), b = rnd(-4, 4);
+          if (!a && !b) return null;
+          Q = P.map((p) => tr(p, a, b));
+          why = `Imej tidak terbalik dan tidak berpusing. Semua bucu bergerak sama jarak dan arah, iaitu translasi ${vec(a, b)}.`;
+        } else if (type === 'pantulan') {
+          const ln = pick([{ k: 'x', v: rnd(-2, 2) }, { k: 'y', v: rnd(-2, 2) }, { k: 'd' }, { k: 'n' }]);
+          Q = P.map((p) => refl(p, ln));
+          why = `Imej <b>terbalik</b> (orientasi songsang). Ini ialah pantulan pada garis <b>${lineName(ln)}</b>.`;
+        } else {
+          const c = [rnd(-2, 2), rnd(-2, 2)], ang = pick([90, 180, 270]);
+          Q = P.map((p) => rot(p, c, ang));
+          const r = ang === 180 ? { ang: 180 } : { ang: 90, dir: ang === 90 ? 'ccw' : 'cw' };
+          why = `Imej <b>berpusing</b> tetapi tidak terbalik. Ini ialah putaran <b>${rotName(r)}</b> pada pusat <b>${pt(c)}</b>.`;
+        }
+        if (!allIn(P, Q) || overlaps(P, Q)) return null;
+        return {
+          kind: 'mcq',
+          prompt: 'Rajah menunjukkan objek <b>ABC</b> dan imejnya <b>A′B′C′</b>. Apakah transformasi yang terlibat?',
+          svg: diagram({ obj: P, img: Q, aria: 'Objek ABC dan imej A′B′C′' }),
+          options: ['Translasi', 'Pantulan', 'Putaran'],
+          answer: TOPICS[type],
+          hint: 'Bandingkan objek dengan imej. Adakah imej <b>terbalik</b>? Adakah imej <b>berpusing</b>? Atau hanya <b>beralih</b> tempat?',
+          solution: `<p>Jawapan: <b>${TOPICS[type]}</b></p><p>${why}</p>`
+        };
+      });
+    }
+
+    // SEDERHANA: cari koordinat imej satu titik
+    function genSederhana(topic) {
+      return tryGen(() => {
+        const A = [rnd(-5, 5), rnd(-4, 4)];
+        if (topic === 'translasi') {
+          const a = rnd(-5, 5), b = rnd(-4, 4);
+          if (!a || !b) return null;
+          const B = tr(A, a, b);
+          if (!inRange(B)) return null;
+          return {
+            kind: 'coord',
+            prompt: `Titik <b>A${pt(A)}</b> ditranslasikan oleh ${vec(a, b)}. Nyatakan koordinat imej <b>A′</b>.`,
+            svg: diagram({ points: [{ p: A, col: C.obj, label: 'A' }], aria: 'Titik A pada grid' }),
+            answer: B,
+            hint: 'Tambah <b>a</b> pada koordinat-x dan tambah <b>b</b> pada koordinat-y.',
+            solution: `<ol class="steps-sol"><li>x′ = ${m(A[0])} + (${m(a)}) = ${m(B[0])}</li><li>y′ = ${m(A[1])} + (${m(b)}) = ${m(B[1])}</li></ol><p>Jawapan: <b>A′${pt(B)}</b></p>`,
+            reveal: diagram({ points: [{ p: A, col: C.obj, label: 'A' }, { p: B, col: C.img, label: 'A′' }] })
+          };
+        }
+        if (topic === 'pantulan') {
+          const ln = pick([{ k: 'x', v: rnd(-3, 3) }, { k: 'y', v: rnd(-3, 3) }, { k: 'x', v: 0 }, { k: 'y', v: 0 }, { k: 'd' }]);
+          const B = refl(A, ln);
+          if (!inRange(B) || same(A, B)) return null;
+          const d = lineDist(A, ln);
+          let steps;
+          if (ln.k === 'x') steps = `<li>Jarak A ke garis ${lineName(ln)}: ${d} unit</li><li>Imej berada ${d} unit di sebelah lain: x′ = ${m(B[0])}</li><li>Koordinat-y tidak berubah: y′ = ${m(B[1])}</li>`;
+          else if (ln.k === 'y') steps = `<li>Jarak A ke garis ${lineName(ln)}: ${d} unit</li><li>Imej berada ${d} unit di sebelah lain: y′ = ${m(B[1])}</li><li>Koordinat-x tidak berubah: x′ = ${m(B[0])}</li>`;
+          else steps = `<li>Pantulan pada garis y = x menukar tempat koordinat-x dan koordinat-y.</li><li>${pt(A)} → ${pt(B)}</li>`;
+          return {
+            kind: 'coord',
+            prompt: `Titik <b>A${pt(A)}</b> dipantulkan pada garis <b>${lineName(ln)}</b>. Nyatakan koordinat imej <b>A′</b>.`,
+            svg: diagram({ points: [{ p: A, col: C.obj, label: 'A' }], line: ln, lineLabel: true, aria: 'Titik A dan garis pantulan' }),
+            answer: B,
+            hint: 'Kira jarak titik A ke garis pantulan. Imej A′ berada pada jarak yang sama di sebelah lain garis.',
+            solution: `<ol class="steps-sol">${steps}</ol><p>Jawapan: <b>A′${pt(B)}</b></p>`,
+            reveal: diagram({ points: [{ p: A, col: C.obj, label: 'A' }, { p: B, col: C.img, label: 'A′' }], line: ln, lineLabel: true })
+          };
+        }
+        // putaran
+        const c = pick([[0, 0], [0, 0], [rnd(-2, 2), rnd(-2, 2)]]);
+        const r = pick([{ ang: 90, dir: 'ccw' }, { ang: 90, dir: 'cw' }, { ang: 180 }]);
+        const B = rot(A, c, rotAng(r));
+        if (!inRange(B) || same(A, c)) return null;
+        const dx = A[0] - c[0], dy = A[1] - c[1], ex = B[0] - c[0], ey = B[1] - c[1];
+        const desc = (x, y) => [x ? `${Math.abs(x)} unit ke ${x > 0 ? 'kanan' : 'kiri'}` : '', y ? `${Math.abs(y)} unit ke ${y > 0 ? 'atas' : 'bawah'}` : ''].filter(Boolean).join(' dan ') || 'di pusat';
+        const cName = same(c, [0, 0]) ? 'asalan O(0, 0)' : `pusat ${pt(c)}`;
+        return {
+          kind: 'coord',
+          prompt: `Titik <b>A${pt(A)}</b> diputarkan <b>${rotName(r)}</b> pada <b>${cName}</b>. Nyatakan koordinat imej <b>A′</b>.`,
+          svg: diagram({ points: [{ p: A, col: C.obj, label: 'A' }], center: c, centerLabel: same(c, [0, 0]) ? 'O' : 'C', aria: 'Titik A dan pusat putaran' }),
+          answer: B,
+          hint: 'Lihat kedudukan A dari pusat putaran (kanan/kiri, atas/bawah), kemudian putarkan kedudukan itu.',
+          solution: `<ol class="steps-sol"><li>Dari pusat, A berada ${desc(dx, dy)}.</li><li>Selepas putaran ${rotName(r)}, A′ berada ${desc(ex, ey)} dari pusat.</li></ol><p>Jawapan: <b>A′${pt(B)}</b></p>`,
+          reveal: diagram({ points: [{ p: A, col: C.obj, label: 'A' }, { p: B, col: C.img, label: 'A′' }], center: c, centerLabel: same(c, [0, 0]) ? 'O' : 'C' })
+        };
+      });
+    }
+
+    // SUKAR: nyatakan transformasi selengkapnya
+    function genSukar(topic) {
+      return tryGen(() => {
+        const P = shape();
+        if (topic === 'translasi') {
+          const a = rnd(-5, 5), b = rnd(-4, 4);
+          if (!a || !b) return null;
+          const Q = P.map((p) => tr(p, a, b));
+          if (!allIn(P, Q) || overlaps(P, Q)) return null;
+          return {
+            kind: 'vector',
+            prompt: 'Rajah menunjukkan objek <b>ABC</b> dan imejnya <b>A′B′C′</b> di bawah suatu translasi. Nyatakan <b>vektor translasi</b> itu.',
+            svg: diagram({ obj: P, img: Q }),
+            answer: [a, b],
+            hint: 'Pilih satu bucu, contohnya A. Kira berapa unit ke kanan/kiri dan ke atas/bawah untuk sampai ke A′.',
+            solution: `<ol class="steps-sol"><li>A${pt(P[0])} → A′${pt(Q[0])}</li><li>Mengufuk: ${m(Q[0][0])} − (${m(P[0][0])}) = ${m(a)}</li><li>Mencancang: ${m(Q[0][1])} − (${m(P[0][1])}) = ${m(b)}</li></ol><p>Jawapan: translasi ${vec(a, b)}</p>`
+          };
+        }
+        if (topic === 'pantulan') {
+          const pool = [{ k: 'x', v: -2 }, { k: 'x', v: -1 }, { k: 'x', v: 0 }, { k: 'x', v: 1 }, { k: 'x', v: 2 }, { k: 'y', v: -2 }, { k: 'y', v: -1 }, { k: 'y', v: 0 }, { k: 'y', v: 1 }, { k: 'y', v: 2 }, { k: 'd' }, { k: 'n' }];
+          const ln = pick(pool);
+          const Q = P.map((p) => refl(p, ln));
+          if (!allIn(P, Q) || overlaps(P, Q)) return null;
+          const others = shuffle(pool.filter((l) => lineName(l) !== lineName(ln) && !P.map((p) => refl(p, l)).every((q, i) => same(q, Q[i])))).slice(0, 3);
+          const mid = [(P[0][0] + Q[0][0]) / 2, (P[0][1] + Q[0][1]) / 2];
+          return {
+            kind: 'mcq',
+            prompt: 'Rajah menunjukkan objek <b>ABC</b> dan imejnya <b>A′B′C′</b> di bawah suatu pantulan. Nyatakan <b>garis pantulan</b> itu.',
+            svg: diagram({ obj: P, img: Q }),
+            options: shuffle([ln, ...others].map(lineName)),
+            answer: lineName(ln),
+            hint: 'Garis pantulan berada <b>di tengah-tengah</b> antara setiap bucu dan imejnya.',
+            solution: `<ol class="steps-sol"><li>A${pt(P[0])} dan A′${pt(Q[0])}: titik tengahnya ialah ${pt(mid.map((v) => Math.round(v * 10) / 10))}.</li><li>Semua titik tengah bucu dan imejnya terletak pada garis <b>${lineName(ln)}</b>.</li></ol><p>Jawapan: pantulan pada garis <b>${lineName(ln)}</b></p>`,
+            reveal: diagram({ obj: P, img: Q, line: ln, lineLabel: true })
+          };
+        }
+        // putaran
+        const c = [rnd(-2, 2), rnd(-2, 2)];
+        const r = pick([{ ang: 90, dir: 'ccw' }, { ang: 90, dir: 'cw' }, { ang: 180 }]);
+        const Q = P.map((p) => rot(p, c, rotAng(r)));
+        if (!allIn(P, Q) || overlaps(P, Q) || P.some((p) => same(p, c))) return null;
+        const label = (rr, cc) => `Putaran ${rotName(rr)} pada pusat ${pt(cc)}`;
+        const wrongC = pick([[c[0] + 1, c[1]], [c[0] - 1, c[1]], [c[0], c[1] + 1], [c[0], c[1] - 1]]);
+        const otherR = r.ang === 180 ? [{ ang: 90, dir: 'ccw' }, { ang: 90, dir: 'cw' }] : [{ ang: 90, dir: r.dir === 'ccw' ? 'cw' : 'ccw' }, { ang: 180 }];
+        const opts = [label(r, c), label(otherR[0], c), label(otherR[1], c), label(r, wrongC)];
+        return {
+          kind: 'mcq',
+          prompt: 'Rajah menunjukkan objek <b>ABC</b> dan imejnya <b>A′B′C′</b> di bawah suatu putaran pada pusat <b>C</b>. Huraikan putaran itu selengkapnya.',
+          svg: diagram({ obj: P, img: Q, center: c, centerLabel: 'C' }),
+          options: shuffle(opts),
+          answer: opts[0],
+          hint: 'Baca koordinat pusat C pada grid. Kemudian bayangkan garis dari C ke A dan dari C ke A′: berapakah sudut di antaranya, dan ke arah mana?',
+          solution: `<ol class="steps-sol"><li>Pusat putaran: C${pt(c)}</li><li>A${pt(P[0])} → A′${pt(Q[0])}: berpusing <b>${rotName(r)}</b> mengelilingi C.</li></ol><p>Jawapan: <b>${opts[0]}</b></p>`
+        };
+      });
+    }
+
+    const GEN = { mudah: genMudah, sederhana: genSederhana, sukar: genSukar };
+
+    /* ---- keadaan sesi ---- */
+    let s = { screen: 'menu', topic: null, level: null, qs: [], i: 0, score: 0, sel: null, checked: false, ok: false, hint: false, val: ['', ''] };
+
+    function start(topic, level) {
+      const qs = [];
+      for (let i = 0; i < N_Q; i++) qs.push(GEN[level](topic));
+      s = { screen: 'quiz', topic, level, qs, i: 0, score: 0, sel: null, checked: false, ok: false, hint: false, val: ['', ''] };
+    }
+
+    function best(topic, level) { return ((state.best || {})[topic] || {})[level]; }
+    function finish() {
+      state.best = state.best || {};
+      state.best[s.topic] = state.best[s.topic] || {};
+      const prev = state.best[s.topic][s.level] || 0;
+      state.best[s.topic][s.level] = Math.max(prev, s.score);
+      state.progress[s.topic] = Object.values(state.best[s.topic]).filter((v) => v >= 3).length;
+      save(state);
+      s.screen = 'done';
+    }
+
+    /* ---- paparan ---- */
+    function renderMenu() {
+      const card = (k) => {
+        const lv = Object.keys(LEVELS).map((l) => {
+          const b = best(k, l);
+          return `<button type="button" class="lv-btn" data-lat="start" data-topic="${k}" data-level="${l}"><b>${LEVELS[l]}</b><small>${b === undefined ? '5 soalan' : `Terbaik: ${b}/${N_Q}`}</small>${b !== undefined && b >= 3 ? `<span class="lv-done">${icon('check', 14)}</span>` : ''}</button>`;
+        }).join('');
+        return `<section class="card lat-topic" style="--c:var(--${k})"><div class="lat-topic-head"><span class="icon-box">${icon(k === 'translasi' ? 'tr' : k === 'pantulan' ? 'pa' : 'pu', 24)}</span><div><h2>${TOPICS[k]}</h2><p>${state.progress[k]}/3 tahap siap</p></div></div><div class="lv-row">${lv}</div></section>`;
+      };
+      return `
+        ${head('Latihan', 'Pilih topik dan tahap. Setiap set ada 5 soalan.', 'var(--amber)', `<span class="pill pill-star">${icon('star', 16)} ${state.stars}</span>`)}
+        <div class="stack">
+          <div class="lat-grid">${card('translasi')}${card('pantulan')}${card('putaran')}</div>
+          <div class="notice notice-amber"><span class="ico">${icon('star')}</span><p>Setiap jawapan betul memberi <b>1 bintang</b>. Dapatkan sekurang-kurangnya <b>3/5</b> untuk menandakan tahap itu siap.</p></div>
+        </div>`;
+    }
+
+    function renderQuiz() {
+      const q = s.qs[s.i];
+      let answer = '';
+      if (q.kind === 'mcq') {
+        answer = `<div class="opts${q.options.length > 3 ? ' opts-col' : ''}">${q.options.map((o, i) => {
+          let cls = '';
+          if (s.checked) { if (o === q.answer) cls = ' right'; else if (i === s.sel) cls = ' wrong'; }
+          else if (i === s.sel) cls = ' sel';
+          return `<button type="button" class="opt${cls}" data-lat="sel" data-i="${i}" ${s.checked ? 'disabled' : ''}>${o}</button>`;
+        }).join('')}</div>`;
+      } else {
+        const dis = s.checked ? 'disabled' : '';
+        const f = (i, lbl) => `<label class="num-in"><span>${lbl}</span><input type="number" inputmode="numeric" step="1" data-lat-in="${i}" value="${s.val[i]}" ${dis} aria-label="${lbl}"></label>`;
+        answer = q.kind === 'coord'
+          ? `<div class="ans-row"><b class="ans-lbl">A′ (</b>${f(0, 'x')}<b class="ans-lbl">,</b>${f(1, 'y')}<b class="ans-lbl">)</b></div>`
+          : `<div class="ans-row"><span class="vec-in">${f(0, 'a')}${f(1, 'b')}</span></div>`;
+      }
+      const fb = s.checked
+        ? `<section class="feedback ${s.ok ? 'fb-ok' : 'fb-no'}"><h3>${s.ok ? `Betul! ${icon('star', 18)} +1` : 'Belum tepat'}</h3>${q.reveal ? `<div class="diagram">${q.reveal}</div>` : ''}${q.solution}</section>`
+        : '';
+      const last = s.i === N_Q - 1;
+      return `
+        <div class="lat-top">
+          <button type="button" class="back" data-lat="menu" aria-label="Kembali ke menu latihan">${icon('back')}</button>
+          <div class="lat-meta"><span class="eyebrow" style="color:var(--${s.topic})">${TOPICS[s.topic]} · ${LEVELS[s.level]}</span><b>Soalan ${s.i + 1} / ${N_Q}</b></div>
+          <span class="pill pill-star">${icon('star', 16)} ${s.score}</span>
+        </div>
+        <div class="bar lat-bar"><i style="width:${(s.i + (s.checked ? 1 : 0)) / N_Q * 100}%;background:var(--${s.topic})"></i></div>
+        <div class="lat-cols" style="--c:var(--${s.topic})">
+          <section class="card lat-q"><p class="q-text">${q.prompt}</p><div class="diagram">${q.svg}</div></section>
+          <section class="stack lat-a">
+            <h2 class="lat-h">Jawapan anda</h2>
+            ${answer}
+            ${s.hint && !s.checked ? `<div class="notice notice-amber"><span class="ico">${icon('star')}</span><p><b>Petunjuk:</b> ${q.hint}</p></div>` : ''}
+            ${fb}
+            <div class="lat-actions">
+              ${s.checked
+                ? `<button type="button" class="btn btn-primary lat-main" data-lat="next">${last ? 'Lihat Keputusan' : 'Soalan Seterusnya'} ${icon('arrow')}</button>`
+                : `<button type="button" class="btn btn-ghost" data-lat="hint" ${s.hint ? 'disabled' : ''}>Petunjuk</button><button type="button" class="btn btn-primary lat-main" data-lat="check">Semak Jawapan</button>`}
+            </div>
+            <p class="lat-msg" role="status" aria-live="polite"></p>
+          </section>
+        </div>`;
+    }
+
+    function renderDone() {
+      const msg = s.score === N_Q ? 'Cemerlang! Semua betul! 🎉' : s.score >= 3 ? 'Bagus! Tahap ini siap.' : 'Cuba lagi, anda boleh! 💪';
+      return `
+        <div class="lat-done card" style="--c:var(--${s.topic})">
+          <span class="eyebrow" style="color:var(--${s.topic})">${TOPICS[s.topic]} · ${LEVELS[s.level]}</span>
+          <div class="big-score">${s.score}<small>/ ${N_Q}</small></div>
+          <div class="stars-row">${Array.from({ length: N_Q }, (_, i) => `<span class="${i < s.score ? 'on' : ''}">${icon('star', 30)}</span>`).join('')}</div>
+          <p class="done-msg">${msg}</p>
+          <p class="muted-p">Jumlah bintang anda: <b>${state.stars}</b></p>
+          <div class="done-actions">
+            <button type="button" class="btn btn-primary" data-lat="start" data-topic="${s.topic}" data-level="${s.level}">Ulang Set Baharu</button>
+            <button type="button" class="btn btn-ghost" data-lat="menu">Pilih Latihan Lain</button>
+          </div>
+        </div>`;
+    }
+
+    function render() { return s.screen === 'quiz' ? renderQuiz() : s.screen === 'done' ? renderDone() : renderMenu(); }
+
+    function rerender(top) {
+      const view = document.getElementById('view');
+      view.innerHTML = render();
+      if (top) window.scrollTo(0, 0);
+    }
+
+    function check() {
+      const q = s.qs[s.i];
+      const msg = document.querySelector('.lat-msg');
+      if (q.kind === 'mcq') {
+        if (s.sel === null) { msg.textContent = 'Pilih satu jawapan dahulu.'; return; }
+        s.ok = q.options[s.sel] === q.answer;
+      } else {
+        const v = [...document.querySelectorAll('[data-lat-in]')].map((el) => el.value.trim());
+        s.val = v;
+        if (v.some((x) => x === '' || !Number.isInteger(Number(x)))) { msg.textContent = 'Isi kedua-dua kotak dengan nombor bulat.'; return; }
+        s.ok = Number(v[0]) === q.answer[0] && Number(v[1]) === q.answer[1];
+      }
+      s.checked = true;
+      if (s.ok) { s.score++; state.stars++; save(state); }
+      rerender(false);
+      const fbEl = document.querySelector('.feedback');
+      if (fbEl) fbEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function onClick(e) {
+      const el = e.target.closest('[data-lat]');
+      if (!el) return false;
+      const act = el.dataset.lat;
+      if (act === 'start') { start(el.dataset.topic, el.dataset.level); rerender(true); }
+      else if (act === 'menu') { s.screen = 'menu'; rerender(true); }
+      else if (act === 'sel' && !s.checked) { s.sel = Number(el.dataset.i); rerender(false); }
+      else if (act === 'hint') { s.val = [...document.querySelectorAll('[data-lat-in]')].map((x) => x.value); s.hint = true; rerender(false); }
+      else if (act === 'check') check();
+      else if (act === 'next') {
+        if (s.i >= N_Q - 1) finish();
+        else Object.assign(s, { i: s.i + 1, sel: null, checked: false, ok: false, hint: false, val: ['', ''] });
+        rerender(true);
+      }
+      return true;
+    }
+    function onKey(e) {
+      if (e.key === 'Enter' && e.target.matches('[data-lat-in]') && !s.checked) { e.preventDefault(); check(); }
+    }
+    return { render, onClick, onKey, reset: () => { if (s.screen === 'done') s.screen = 'menu'; } };
+  })();
+
   function soon(title, sub, c, ic, msg, chips) {
     return `${head(title, sub, c)}
       <section class="card soon" style="--c:${c}">
@@ -272,6 +658,7 @@
   function route() {
     const r = (location.hash.replace(/^#\/?/, '') || 'splash');
     const name = VIEWS[r] ? r : 'splash';
+    if (name === 'latihan') Lat.reset();
     const view = document.getElementById('view');
     view.innerHTML = VIEWS[name]();
     document.body.classList.toggle('fullscreen', FULLSCREEN.includes(name));
@@ -288,6 +675,7 @@
 
   /* ---------- Interaksi ---------- */
   document.addEventListener('click', (e) => {
+    if (Lat.onClick(e)) return;
     const tab = e.target.closest('[data-tab]');
     if (tab) {
       const box = tab.closest('.stack');
@@ -300,6 +688,8 @@
       deferredPrompt.userChoice.finally(() => { deferredPrompt = null; document.querySelectorAll('[data-install-box]').forEach((b) => b.classList.remove('show')); });
     }
   });
+
+  document.addEventListener('keydown', (e) => Lat.onKey(e));
 
   function toast(msg) {
     const t = document.getElementById('toast');

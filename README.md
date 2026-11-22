@@ -8,9 +8,9 @@ App pembelajaran **Transformasi Isometri** (Matematik Tingkatan 2, Bab 11): Tran
 
 ## Status
 - [x] Fasa 1: Kerangka PWA (skrin pembuka, utama, navigasi, cara pasang, offline)
-- [ ] Fasa 2: Simulasi Translasi, Pantulan, Putaran
-- [ ] Fasa 3: Nota
-- [ ] Fasa 4: Latihan interaktif
+- [x] Fasa 2: Simulasi Translasi, Pantulan, Putaran
+- [x] Fasa 3: Nota
+- [x] Fasa 4: Latihan interaktif
 - [ ] Fasa 5: Kuiz
 
 ## Struktur fail
