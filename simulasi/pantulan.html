@@ -87,7 +87,6 @@ input[type=range]{accent-color:var(--accent)}
 <div class="row"><button id="play" class="primary">▶ Mainkan</button><button id="reset">↺ Reset</button></div>
 <div class="row" style="margin:12px 0"><label for="speed" style="margin:0">Kelajuan</label><input id="speed" type="range" min=".2" max="1" step=".1" value=".6" style="flex:1;min-width:0"><span id="speedlabel" class="muted">0.6×</span></div>
 <div class="row"><button id="prev" style="flex:1">← Sebelum</button><button id="next" style="flex:1">Seterusnya →</button></div>
-<div id="coordinates" class="statusline"></div>
 <div class="note"><strong>Ingat:</strong> Pantulan menghasilkan imej yang <strong>sama bentuk dan saiz</strong>, tetapi <strong>orientasi songsang</strong> (terbalik). Setiap titik dan imejnya berada pada <strong>jarak yang sama</strong> dari garis pantulan, dan garis yang menyambungkannya <strong>berserenjang</strong> dengan garis pantulan. Titik pada garis pantulan tidak berubah.</div>
 </section>
 </div>
@@ -139,9 +138,7 @@ function updateButtons(){$('play').textContent=playing?'⏸ Pause':index>=steps.
 function stop(){playing=false;cancelAnimationFrame(frame);last=null;updateButtons()}
 function info(){const na=String(a).replace('-','−'),name=kind==='x'?'x = '+na:kind==='y'?'y = '+na:kind==='d'?'y = x':'y = −x',type=kind==='x'?'garis menegak':kind==='y'?'garis mengufuk':'garis condong';
 $('explain').innerHTML='Pantulkan pada garis <strong>'+name+'</strong> ('+type+').<br>Laluan hijau: bucu ke garis pantulan. Laluan oren: garis ke imej, dengan jarak yang sama.';
-const A=pts[0],B=imgs[0],f=v=>String(v).replace('-','−');let html='<strong>Bucu ditunjukkan:</strong> A<br><strong>Koordinat:</strong> A('+A.map(f).join(', ')+') → A′('+B.map(f).join(', ')+')';
-if(kind==='x'||kind==='y'){const d=Math.abs(kind==='x'?A[0]-a:A[1]-a);html+='<br><strong>Jarak A ke garis:</strong> '+d+' petak · <strong>Jarak garis ke A′:</strong> '+d+' petak'}else html+='<br><strong>Garis pantulan:</strong> '+name;
-$('coordinates').innerHTML=html}
+}
 function setup(){
 stop();kind=$('axis').value;index=0;progress=0;mode='idle';wait=0;
 $('valuebox').style.display=kind==='x'||kind==='y'?'flex':'none';$('valuestatus').style.display=kind==='x'||kind==='y'?'block':'none';$('valuestatus').textContent='Nilai '+(kind==='x'?'a':'b')+' = '+a;$('valuestatus').style.color='#94A3B8';$('value').setAttribute('aria-label',kind==='x'?'Nilai a':'Nilai b');$('randomize').style.display=$('shape').value==='random'?'block':'none';
