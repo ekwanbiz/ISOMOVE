@@ -88,7 +88,7 @@
   const VIEWS = {
     splash() {
       const tiles = [['translasi', 'tr', 'Translasi', 'Gerakkan objek dengan vektor'], ['pantulan', 'pa', 'Pantulan', 'Pantulkan pada satu paksi'], ['putaran', 'pu', 'Putaran', 'Putarkan pada satu pusat']]
-        .map(([k, ic, t, d]) => `<div class="card tile" style="--c:var(--${k})"><span class="icon-box">${icon(ic)}</span><span><b>${t}</b><small>${d}</small></span></div>`).join('');
+        .map(([k, ic, t, d]) => `<a href="simulasi/${k}.html" class="card tile" style="--c:var(--${k})" aria-label="Buka simulasi ${t}"><span class="icon-box">${icon(ic)}</span><span class="tile-txt"><b>${t}</b><small>${d}</small></span><span class="tile-go">${icon('arrow', 16)}</span></a>`).join('');
       const actions = `
         <a href="#/utama" class="btn btn-primary">Jom Mula! ${icon('arrow')}</a>
         ${isStandalone() ? '' : `<a href="#/pasang" class="btn btn-ghost">${icon('phone', 20)} Cara Pasang di Telefon</a>`}

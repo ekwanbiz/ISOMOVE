@@ -362,3 +362,13 @@ body.fullscreen .view { padding-bottom: calc(32px + var(--safe-bottom)); }
 .k-row span { color: var(--c); font-weight: 700; }
 .k-row b { text-align: right; }
 .k-newbest { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: rgba(251,191,36,0.15); color: var(--amber); font-weight: 700; font-size: 13px; }
+
+/* Jubin skrin pembuka boleh ditekan */
+a.tile { position: relative; text-decoration: none; color: var(--text); cursor: pointer; transition: transform .15s, border-color .15s, background .15s; }
+a.tile:hover { border-color: var(--c); transform: translateY(-2px); }
+a.tile:active { transform: scale(0.97); background: color-mix(in srgb, var(--c) 12%, var(--surface)); }
+.tile-go { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 999px; display: flex; align-items: center; justify-content: center; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
+@media (min-width: 900px) {
+  .tile-txt { flex: 1; }
+  .tile-go { position: static; width: 32px; height: 32px; }
+}
