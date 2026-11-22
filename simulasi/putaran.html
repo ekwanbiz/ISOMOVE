@@ -75,6 +75,54 @@ label{display:block;margin-bottom:6px}.cols{display:grid;grid-template-columns:m
 .a-canvas .warning{position:static;display:block;transform:none;width:max-content;max-width:100%;margin:0 0 8px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;line-height:1.4;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:none;opacity:1;animation:none}
 .a-canvas .warning:empty{display:none}
 .a-canvas:has(.warning:not(:empty)) .hint{display:none}
+/* ===== Kawalan padat + satu skrin di telefon ===== */
+.back svg{width:22px;height:22px;flex:none}
+.crow{display:flex;align-items:center;gap:8px}
+.crow+.crow{margin-top:10px}
+.cl{flex:none;width:60px;margin:0;font-size:12px;font-weight:700;color:var(--muted)}
+.crow select{flex:1;min-width:0;margin-top:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.rnd{width:100%;margin-top:8px}
+.vec{display:flex;align-items:stretch;gap:6px}
+.vec .bracket{height:auto}
+.vcol{display:flex;flex-direction:column;gap:6px}
+.vcol .row{gap:6px}.vcol .muted{width:10px}
+.crow .set{margin-left:4px;white-space:nowrap}
+.crow .coord{flex:1;flex-wrap:nowrap;gap:6px}
+.crow .axisvalue{flex:none}
+.cl{width:48px}.crow .coord input,.crow .axisvalue input{width:52px}.crow .set{padding-left:10px;padding-right:10px}
+#angle{flex:0 0 84px}
+.pbtns #prev,.pbtns #next{flex:none;width:48px;padding:0;font-size:18px}
+.pbtns button{white-space:nowrap}.pbtns .primary{min-width:0}
+.pspeed{margin-top:12px}
+.a-controls .note{margin-top:10px}
+@media(max-width:699px){
+ .wrap{height:100svh;display:flex;flex-direction:column;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+ .top{margin-bottom:8px;padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px;gap:10px}
+ .top .eyebrow{display:none}
+ .top h1{font-size:20px;margin:0}
+ .back{height:40px;padding:0 12px 0 10px;font-size:14px}
+ .top .snd-btn{width:40px;height:40px;min-height:40px;border-radius:12px}
+ .grid{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+ .panel{padding:10px 12px;border-radius:16px}
+ select,input[type=number]{min-height:38px;padding:5px 8px;font-size:16px}
+ input[type=number]{width:54px}
+ .coord input,.axisvalue input{width:52px}
+ button{min-height:40px;padding:6px 10px}
+ .crow+.crow{margin-top:8px}
+ .cl{width:52px;font-size:11.5px}
+ .vcol{gap:4px}
+ .a-controls .note{margin-top:8px;padding:6px 10px;font-size:12px;line-height:1.4}
+ .valuestatus{font-size:11px;margin-top:4px}
+ .a-canvas{flex:1;min-height:170px;display:flex;flex-direction:column}
+ .hint,.sub{display:none}
+ .a-canvas .warning{margin:0 0 4px}
+ .canvasbox{flex:1;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center;border:0;border-radius:0;background:none;overflow:visible}
+ .canvasbox>canvas,.canvasbox>svg{width:min(100cqw,calc(100cqh * 600 / 440));height:auto;aspect-ratio:600/440;border:1px solid var(--border);border-radius:14px}
+ .barbg{margin:8px 0}
+ .pspeed{margin-top:8px}
+ .primary{font-size:15px}
+}
 </style>
 </head>
 <body>
@@ -85,25 +133,22 @@ label{display:block;margin-bottom:6px}.cols{display:grid;grid-template-columns:m
 <span class="top-snd" id="sndslot"></span></header>
 <div class="grid">
 <section class="panel a-controls">
-<label for="shape">Pilihan Bentuk</label>
-<select id="shape"><option value="triangle">Segi tiga</option><option value="quad">Segi empat</option><option value="pentagon">Pentagon</option><option value="hexagon">Heksagon</option><option value="trapezium">Trapezium</option><option value="random">Random</option></select>
-<button id="randomize" style="display:none;width:100%;margin-top:10px">⚄ Jana Bentuk Baharu</button>
-<div class="cols" style="margin-top:14px"><div><label for="angle">Sudut Putaran</label><select id="angle"><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option><option value="360">360°</option></select></div><div><label for="direction">Arah Putaran</label><select id="direction"><option value="ccw">Lawan arah jam ↺</option><option value="cw">Arah jam ↻</option></select></div></div>
-<div style="margin-top:14px"><div class="title" style="margin-bottom:8px">Pusat Putaran P(x, y)</div><div class="coord"><span class="muted">x</span><input id="cx" type="number" value="0" min="-8" max="8" step="1" aria-label="Koordinat x pusat putaran"><span class="muted">y</span><input id="cy" type="number" value="0" min="-6" max="6" step="1" aria-label="Koordinat y pusat putaran"><button id="apply" class="set">✓ Tetapkan</button></div></div>
+<div class="crow"><label class="cl" for="shape">Bentuk</label><select id="shape"><option value="triangle">Segi tiga</option><option value="quad">Segi empat</option><option value="pentagon">Pentagon</option><option value="hexagon">Heksagon</option><option value="trapezium">Trapezium</option><option value="random">Random</option></select></div>
+<button id="randomize" class="rnd" style="display:none">⚄ Jana Bentuk Baharu</button>
+<div class="crow"><label class="cl" for="angle">Sudut</label><select id="angle"><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option><option value="360">360°</option></select><label class="sr" for="direction">Arah putaran</label><select id="direction"><option value="ccw">Lawan arah jam ↺</option><option value="cw">Arah jam ↻</option></select></div>
+<div class="crow"><span class="cl">Pusat P</span><div class="coord"><span class="muted">x</span><input id="cx" type="number" value="0" min="-8" max="8" step="1" aria-label="Koordinat x pusat putaran"><span class="muted">y</span><input id="cy" type="number" value="0" min="-6" max="6" step="1" aria-label="Koordinat y pusat putaran"><button id="apply" class="set">✓ Tetapkan</button></div></div>
 <div id="explain" class="note" hidden>Putar <strong>90° lawan arah jam</strong> pada pusat <strong>P(0, 0)</strong>.</div>
 </section>
 <div class="a-canvas">
 <p class="hint">Seret bentuk biru atau pusat putaran P pada grid</p>
 <p class="sub">Klik ruang kosong untuk memindahkan bentuk. Semua bucu kekal pada titik persilangan grid.</p>
 <div id="warning" class="warning" role="alert" aria-live="assertive"></div><div class="canvasbox"><canvas id="canvas" width="600" height="440" aria-label="Grid Cartes interaktif untuk putaran"></canvas></div>
-<div class="legend"><span><i style="background:#38BDF8"></i>Bentuk asal</span><span><i style="background:#A78BFA"></i>Pusat P</span><span><i style="background:#FBBF24"></i>Jejari &amp; sudut</span><span><i style="background:repeating-linear-gradient(90deg,#FB923C 0 4px,transparent 4px 6px);border-radius:2px;width:16px;height:4px"></i>Laluan bucu</span><span><i style="background:#F472B6"></i>Imej putaran</span></div>
 </div>
 <section class="panel a-player">
 <div class="row" style="justify-content:space-between"><span id="stage" class="muted">Langkah 0 / 2</span><span id="status" class="muted">Sedia</span></div>
 <div class="barbg"><div id="progress" class="bar"></div></div>
-<div class="row"><button id="play" class="primary">▶ Mainkan</button><button id="reset">↺ Reset</button></div>
-<div class="row" style="margin:12px 0"><label for="speed" style="margin:0">Kelajuan</label><input id="speed" type="range" min=".2" max="1" step=".1" value=".6" style="flex:1;min-width:0"><span id="speedlabel" class="muted">0.6×</span></div>
-<div class="row"><button id="prev" style="flex:1">← Sebelum</button><button id="next" style="flex:1">Seterusnya →</button></div>
+<div class="row pbtns"><button id="prev" aria-label="Langkah sebelum">←</button><button id="play" class="primary">▶ Mainkan</button><button id="next" aria-label="Langkah seterusnya">→</button><button id="reset">↺ Reset</button></div>
+<div class="row pspeed"><label for="speed" style="margin:0">Kelajuan</label><input id="speed" type="range" min=".2" max="1" step=".1" value=".6" style="flex:1;min-width:0"><span id="speedlabel" class="muted">0.6×</span></div>
 <div id="coordinates" class="statusline" hidden></div>
 </section>
 </div>
@@ -173,7 +218,7 @@ if(step>=1){
  if(step===1){ctx.save();ctx.globalAlpha=Math.max(0,1-f);ctx.beginPath();for(let i=0;i<=110;i++){let v=xy(rotate(vertex,i/110));i?ctx.lineTo(...v):ctx.moveTo(...v)}ctx.strokeStyle='#fb923c';ctx.lineWidth=3;ctx.setLineDash([4,7]);ctx.stroke();ctx.setLineDash([]);ctx.restore()}
 }
 dot(C,8,'#a78bfa');ctx.beginPath();ctx.arc(...C,12,0,Math.PI*2);ctx.strokeStyle='#ddd6fe';ctx.lineWidth=2;ctx.stroke();txt(C,'P','#e9d5ff',13,-14);
-$('stage').textContent='Langkah '+step+' / 2';$('status').textContent=step===2?'Selesai':step===1?'Imej selepas putaran':step===0&&t>0&&t<.17?'Sambung P ke '+letter:step===0&&t<.43?'Lukis lengkok oren':step===0&&t<.56?'Sambung P ke '+letter+'′':step===0&&t<.70?'Sudut '+angle+'°':step===0&&t>=.70?'Putaran bentuk':'Sedia';$('progress').style.width=((step+t)/2*100)+'%';$('play').textContent=playing?'⏸ Pause':step===2?'↻ Ulang':'▶ Mainkan';$('prev').disabled=step===0&&t===0;$('next').disabled=step===2;
+$('stage').textContent='Langkah '+step+' / 2';$('status').textContent=step===2?'Selesai':step===1?'Imej selepas putaran':step===0&&t===0?'Sedia':step===0&&t>0&&t<.17?'Sambung P ke '+letter:step===0&&t<.43?'Lukis lengkok oren':step===0&&t<.56?'Sambung P ke '+letter+'′':step===0&&t<.70?'Sudut '+angle+'°':step===0&&t>=.70?'Putaran bentuk':'Sedia';$('progress').style.width=((step+t)/2*100)+'%';$('play').textContent=playing?'⏸ Pause':step===2?'↻ Ulang':'▶ Mainkan';$('prev').disabled=step===0&&t===0;$('next').disabled=step===2;
 let p=vertex,q=target[nearest];$('coordinates').innerHTML='<strong>Bucu terdekat dengan P:</strong> '+letter+'<br><strong>Koordinat:</strong> '+letter+'('+p.map(nearInt).join(', ')+') → '+letter+'′('+q.map(nearInt).join(', ')+')<br><strong>Pusat:</strong> P('+center.join(', ')+') · <strong>Sudut:</strong> '+angle+'° · <strong>Arah:</strong> '+(direction===1?'lawan arah jam':'arah jam');
 }
 function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=0;last=0}

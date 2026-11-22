@@ -186,6 +186,7 @@
     '#fx-layer{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}' +
     '.fx-star{position:absolute;display:block;filter:drop-shadow(0 0 6px rgba(251,191,36,.7));will-change:transform,opacity}' +
     '.snd-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;min-height:44px;padding:0;border-radius:14px;background:var(--surface,#131C2E);border:1px solid var(--border,#22304A);color:var(--text,#E6EDF7);cursor:pointer;touch-action:manipulation}' +
+    '.snd-btn svg{width:20px;height:20px;flex:none}' +
     '.snd-btn.off{color:var(--muted,#8A9BB5)}' +
     '.snd-btn:hover{border-color:var(--muted,#8A9BB5)}';
   document.head.appendChild(css);
