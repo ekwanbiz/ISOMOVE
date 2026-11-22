@@ -145,18 +145,13 @@
     },
 
     simulasi() {
-      const READY = { translasi: 'simulasi/translasi.html', pantulan: 'simulasi/pantulan.html', putaran: 'simulasi/putaran.html' };
-      const sc = (k, title, desc) => `<section class="card sim-card" style="--c:var(--${k})"><div class="diagram">${DIAG[k]()}</div><h2>${title}</h2><p>${desc}</p>${READY[k]
-        ? `<a href="${READY[k]}" class="btn sim-open">Buka Simulasi ${icon('arrow', 18)}</a>`
-        : `<span class="badge">${icon('clock', 14)} Akan dimasukkan</span>`}</section>`;
+      const sc = (k, title, desc) => `<a href="simulasi/${k}.html" class="card sim-card" style="--c:var(--${k})"><div class="diagram">${DIAG[k]()}</div><div class="sim-txt"><h2>${title}</h2><p>${desc}</p><span class="btn sim-open">Buka ${icon('arrow', 18)}</span></div></a>`;
       return `
-        ${head('Simulasi', 'Gerakkan objek dan perhatikan imejnya.', 'var(--putaran)')}
-        <div class="stack">
-          <div class="sim-grid">
-            ${sc('translasi', 'Translasi', 'Ubah vektor (a, b) dan lihat objek bergerak.')}
-            ${sc('pantulan', 'Pantulan', 'Pilih paksi pantulan dan lihat imej terbalik.')}
-            ${sc('putaran', 'Putaran', 'Tetapkan pusat, sudut dan arah putaran.')}
-          </div>
+        ${head('Simulasi', 'Pilih satu transformasi untuk dimulakan.', 'var(--putaran)')}
+        <div class="sim-grid">
+          ${sc('translasi', 'Translasi', 'Ubah vektor dan lihat objek bergerak.')}
+          ${sc('pantulan', 'Pantulan', 'Pilih garis pantulan dan lihat imej terbalik.')}
+          ${sc('putaran', 'Putaran', 'Tetapkan pusat, sudut dan arah putaran.')}
         </div>`;
     },
 
