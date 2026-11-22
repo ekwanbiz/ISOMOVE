@@ -87,6 +87,7 @@ input[type=range]{accent-color:var(--accent)}
 <div class="row"><button id="play" class="primary">▶ Mainkan</button><button id="reset">↺ Reset</button></div>
 <div class="row" style="margin:12px 0"><label for="speed" style="margin:0">Kelajuan</label><input id="speed" type="range" min=".2" max="1" step=".1" value=".6" style="flex:1;min-width:0"><span id="speedlabel" class="muted">0.6×</span></div>
 <div class="row"><button id="prev" style="flex:1">← Sebelum</button><button id="next" style="flex:1">Seterusnya →</button></div>
+<div id="coordinates" class="statusline"></div>
 <div class="note"><strong>Ingat:</strong> Pantulan menghasilkan imej yang <strong>sama bentuk dan saiz</strong>, tetapi <strong>orientasi songsang</strong> (terbalik). Setiap titik dan imejnya berada pada <strong>jarak yang sama</strong> dari garis pantulan, dan garis yang menyambungkannya <strong>berserenjang</strong> dengan garis pantulan. Titik pada garis pantulan tidak berubah.</div>
 </section>
 </div>
@@ -138,7 +139,9 @@ function updateButtons(){$('play').textContent=playing?'⏸ Pause':index>=steps.
 function stop(){playing=false;cancelAnimationFrame(frame);last=null;updateButtons()}
 function info(){const na=String(a).replace('-','−'),name=kind==='x'?'x = '+na:kind==='y'?'y = '+na:kind==='d'?'y = x':'y = −x',type=kind==='x'?'garis menegak':kind==='y'?'garis mengufuk':'garis condong';
 $('explain').innerHTML='Pantulkan pada garis <strong>'+name+'</strong> ('+type+').<br>Laluan hijau: bucu ke garis pantulan. Laluan oren: garis ke imej, dengan jarak yang sama.';
-}
+const dist=p=>kind==='x'?Math.abs(p[0]-a):kind==='y'?Math.abs(p[1]-a):kind==='d'?Math.abs(p[0]-p[1])/Math.SQRT2:Math.abs(p[0]+p[1])/Math.SQRT2;let k=0;pts.forEach((p,i)=>{if(dist(p)<dist(pts[k])-1e-9)k=i});const A=pts[k],B=imgs[k],N=L[k],f=v=>String(v).replace('-','−');let html='<strong>Bucu terdekat dengan garis:</strong> '+N+'<br><strong>Koordinat:</strong> '+N+'('+A.map(f).join(', ')+') → '+N+'′('+B.map(f).join(', ')+')';
+if(kind==='x'||kind==='y'){const d=dist(A);html+='<br><strong>Jarak '+N+' ke garis:</strong> '+d+' petak · <strong>Jarak garis ke '+N+'′:</strong> '+d+' petak'}else html+='<br><strong>Garis pantulan:</strong> '+name;
+if(dist(A)<1e-9)html+='<br>'+N+' berada pada garis pantulan, jadi kedudukannya tidak berubah.';$('coordinates').innerHTML=html}
 function setup(){
 stop();kind=$('axis').value;index=0;progress=0;mode='idle';wait=0;
 $('valuebox').style.display=kind==='x'||kind==='y'?'flex':'none';$('valuestatus').style.display=kind==='x'||kind==='y'?'block':'none';$('valuestatus').textContent='Nilai '+(kind==='x'?'a':'b')+' = '+a;$('valuestatus').style.color='#94A3B8';$('value').setAttribute('aria-label',kind==='x'?'Nilai a':'Nilai b');$('randomize').style.display=$('shape').value==='random'?'block':'none';
