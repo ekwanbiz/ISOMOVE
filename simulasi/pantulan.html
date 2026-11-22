@@ -73,7 +73,7 @@ input[type=range]{accent-color:var(--accent)}
 <div class="grid">
 <section class="panel a-controls">
 <div class="field"><label for="shape">Bentuk</label><select id="shape"><option value="triangle">Segi tiga</option><option value="square">Segi empat</option><option value="pentagon">Pentagon</option><option value="hexagon">Heksagon</option><option value="trapezium">Trapezium</option><option value="random">Random</option></select></div>
-<div class="field"><label for="axis" class="title" style="color:var(--text);font-size:14px;font-weight:700">Garis Pantulan</label><div class="axisrow"><select id="axis"><option value="x">x = a</option><option value="y">y = b</option><option value="d">y = x</option><option value="n">y = −x</option></select><div id="valuebox" class="axisvalue"><input id="value" type="number" min="-5" max="5" step="1" value="1" aria-label="Nilai a"><button id="apply" type="button" class="set">✓ Tetapkan</button></div></div><div id="valuestatus" class="valuestatus">Nilai a = 1</div><div id="explain" class="note"></div></div>
+<div class="field"><label for="axis" class="title" style="color:var(--text);font-size:14px;font-weight:700">Garis Pantulan</label><div class="axisrow"><select id="axis"><option value="x">x = a</option><option value="y">y = b</option><option value="d">y = x</option><option value="n">y = −x</option></select><div id="valuebox" class="axisvalue"><input id="value" type="number" min="-5" max="5" step="1" value="1" aria-label="Nilai a"><button id="apply" type="button" class="set">✓ Tetapkan</button></div></div><div id="valuestatus" class="valuestatus">Nilai a = 1</div><div id="explain" class="note" hidden></div></div>
 <button id="randomize">⚄ Jana Bentuk Baharu</button>
 </section>
 <div class="a-canvas">
@@ -87,8 +87,7 @@ input[type=range]{accent-color:var(--accent)}
 <div class="row"><button id="play" class="primary">▶ Mainkan</button><button id="reset">↺ Reset</button></div>
 <div class="row" style="margin:12px 0"><label for="speed" style="margin:0">Kelajuan</label><input id="speed" type="range" min=".2" max="1" step=".1" value=".6" style="flex:1;min-width:0"><span id="speedlabel" class="muted">0.6×</span></div>
 <div class="row"><button id="prev" style="flex:1">← Sebelum</button><button id="next" style="flex:1">Seterusnya →</button></div>
-<div id="coordinates" class="statusline"></div>
-<div class="note"><strong>Ingat:</strong> Pantulan menghasilkan imej yang <strong>sama bentuk dan saiz</strong>, tetapi <strong>orientasi songsang</strong> (terbalik). Setiap titik dan imejnya berada pada <strong>jarak yang sama</strong> dari garis pantulan, dan garis yang menyambungkannya <strong>berserenjang</strong> dengan garis pantulan. Titik pada garis pantulan tidak berubah.</div>
+<div id="coordinates" class="statusline" hidden></div>
 </section>
 </div>
 </main>

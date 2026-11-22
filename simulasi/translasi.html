@@ -75,7 +75,7 @@ input[type=range]{accent-color:var(--accent)}.note{background:var(--bg);border:1
 <select id="shape"><option value="triangle">Segi tiga</option><option value="quad">Segi empat</option><option value="pentagon">Pentagon</option><option value="hexagon">Heksagon</option><option value="trapezium">Trapezium</option><option value="random">Random</option></select>
 <div class="title" style="margin-top:16px">Vektor Translasi</div>
 <div class="row" style="margin-top:10px"><div class="bracket bl"></div><div style="display:flex;flex-direction:column;gap:8px"><div class="row"><span class="muted" style="width:13px">x</span><input id="dx" type="number" value="4" min="-8" max="8" step="1" aria-label="Nilai x"></div><div class="row"><span class="muted" style="width:13px">y</span><input id="dy" type="number" value="2" min="-6" max="6" step="1" aria-label="Nilai y"></div></div><div class="bracket br"></div><button id="apply" class="set">✓ Tetapkan</button></div>
-<div id="desc" class="note">Gerakkan setiap bucu <strong>4 petak ke kanan</strong> dan <strong>2 petak ke atas</strong>.</div>
+<div id="desc" class="note" hidden>Gerakkan setiap bucu <strong>4 petak ke kanan</strong> dan <strong>2 petak ke atas</strong>.</div>
 <button id="random" style="display:none;width:100%;margin-top:10px">⚄ Jana Bentuk Baharu</button>
 </section>
 <div class="a-canvas">
@@ -89,8 +89,7 @@ input[type=range]{accent-color:var(--accent)}.note{background:var(--bg);border:1
 <div class="row"><button id="play" class="primary">▶ Mainkan</button><button id="reset">↺ Reset</button></div>
 <div class="row" style="margin:12px 0"><label for="speed">Kelajuan</label><input id="speed" type="range" min=".2" max="1" step=".1" value=".6" style="flex:1;min-width:0"><span id="speedtext" class="muted">0.6×</span></div>
 <div class="row"><button id="prev" style="flex:1">← Sebelum</button><button id="next" style="flex:1">Seterusnya →</button></div>
-<div id="coordinates" class="statusline"></div>
-<div class="note"><strong>Ingat:</strong> Translasi menggerakkan setiap titik dengan <strong>jarak dan arah yang sama</strong>. Bentuk, saiz dan orientasi imej kekal sama dengan objek. Nilai <strong>x</strong> positif ke kanan, negatif ke kiri. Nilai <strong>y</strong> positif ke atas, negatif ke bawah.</div>
+<div id="coordinates" class="statusline" hidden></div>
 </section>
 </div>
 </main>
