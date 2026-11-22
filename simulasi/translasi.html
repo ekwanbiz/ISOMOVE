@@ -46,7 +46,7 @@ canvas{width:100%;height:auto;display:block;touch-action:none;cursor:crosshair}
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12px;font-weight:600}
 .legend span{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}
 .legend i{width:10px;height:10px;border-radius:999px;display:inline-block}
-.warning{min-height:18px;margin-top:8px;color:var(--amber);font-size:12px;font-weight:600}
+.canvasbox{position:relative}.warning{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:2;width:max-content;max-width:calc(100% - 24px);padding:10px 16px;border-radius:14px;background:#FBBF24;color:#0B1220;font-size:14px;font-weight:700;line-height:1.35;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.45);pointer-events:none;animation:pop .25s ease-out}.warning:empty{display:none}@keyframes pop{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@media(min-width:900px){.warning{font-size:15px;top:16px}}@media(prefers-reduced-motion:reduce){.warning{animation:none}}
 .barbg{height:8px;background:var(--border);border-radius:999px;overflow:hidden;margin:12px 0}
 .bar{height:100%;width:0%;background:var(--accent);border-radius:999px}
 .primary{flex:1;background:var(--accent);border-color:var(--accent);color:var(--bg);font-family:var(--head);font-weight:700;font-size:16px}
@@ -80,9 +80,8 @@ input[type=range]{accent-color:var(--accent)}
 </section>
 <div class="a-canvas">
 <p class="hint">Klik grid atau seret bentuk biru — bucu terkunci pada grid</p>
-<div class="canvasbox"><canvas id="canvas" width="600" height="440"></canvas></div>
+<div class="canvasbox"><div id="warning" class="warning" role="alert" aria-live="assertive"></div><canvas id="canvas" width="600" height="440"></canvas></div>
 <div class="legend"><span><i style="background:#38BDF8"></i>Bentuk asal</span><span><i style="background:#34D399"></i>Mendatar</span><span><i style="background:#FB923C"></i>Menegak ↑↓</span><span><i style="background:#F472B6"></i>Imej</span></div>
-<div id="warning" class="warning" role="status" aria-live="polite"></div>
 </div>
 <section class="panel a-player">
 <div class="row" style="justify-content:space-between"><span id="step" class="muted">Langkah 0 / 2</span><span id="status" class="muted">Sedia</span></div>
