@@ -258,7 +258,6 @@
   /* ===================== LATIHAN ===================== */
   const Lat = (() => {
     const TOPICS = { translasi: 'Translasi', pantulan: 'Pantulan', putaran: 'Putaran' };
-    const LEVELS = { mudah: 'Mudah', sederhana: 'Sederhana', sukar: 'Sukar' };
     const N_Q = 5;
     const XMIN = -6, XMAX = 6, YMIN = -5, YMAX = 5;
     const C = { obj: '#38BDF8', img: '#F472B6', line: '#C084FC', ctr: '#FBBF24', grid: '#1C2A42', axis: '#64748B', num: '#94A3B8', text: '#E6EDF7' };
@@ -498,19 +497,21 @@
     /* ---- keadaan sesi ---- */
     let s = { screen: 'menu', topic: null, level: null, qs: [], i: 0, score: 0, sel: null, checked: false, ok: false, hint: false, val: ['', ''] };
 
-    function start(topic, level) {
-      const qs = [];
-      for (let i = 0; i < N_Q; i++) qs.push(GEN[level](topic));
-      s = { screen: 'quiz', topic, level, qs, i: 0, score: 0, sel: null, checked: false, ok: false, hint: false, val: ['', ''] };
+    // 80% soalan mudah (4 daripada 5), 1 soalan sederhana/sukar pada kedudukan rawak
+    function start(topic) {
+      const levels = shuffle(['mudah', 'mudah', 'mudah', 'mudah', pick(['sederhana', 'sukar'])]);
+      const qs = levels.map((lv) => GEN[lv](topic));
+      s = { screen: 'quiz', topic, qs, i: 0, score: 0, sel: null, checked: false, ok: false, hint: false, val: ['', ''] };
     }
 
-    function best(topic, level) { return ((state.best || {})[topic] || {})[level]; }
+    function best(topic) { const b = (state.latBest || {})[topic]; return typeof b === 'number' ? b : undefined; }
+    function passed(topic) { return (state.latPass || {})[topic] || 0; }
     function finish() {
-      state.best = state.best || {};
-      state.best[s.topic] = state.best[s.topic] || {};
-      const prev = state.best[s.topic][s.level] || 0;
-      state.best[s.topic][s.level] = Math.max(prev, s.score);
-      state.progress[s.topic] = Object.values(state.best[s.topic]).filter((v) => v >= 3).length;
+      state.latBest = state.latBest || {};
+      state.latPass = state.latPass || {};
+      state.latBest[s.topic] = Math.max(best(s.topic) || 0, s.score);
+      if (s.score >= 3) state.latPass[s.topic] = passed(s.topic) + 1;
+      state.progress[s.topic] = Math.min(3, passed(s.topic));
       save(state);
       s.screen = 'done';
     }
@@ -518,17 +519,14 @@
     /* ---- paparan ---- */
     function renderMenu() {
       const card = (k) => {
-        const lv = Object.keys(LEVELS).map((l) => {
-          const b = best(k, l);
-          return `<button type="button" class="lv-btn" data-lat="start" data-topic="${k}" data-level="${l}"><b>${LEVELS[l]}</b><small>${b === undefined ? '5 soalan' : `Terbaik: ${b}/${N_Q}`}</small>${b !== undefined && b >= 3 ? `<span class="lv-done">${icon('check', 14)}</span>` : ''}</button>`;
-        }).join('');
-        return `<section class="card lat-topic" style="--c:var(--${k})"><div class="lat-topic-head"><span class="icon-box">${icon(k === 'translasi' ? 'tr' : k === 'pantulan' ? 'pa' : 'pu', 24)}</span><div><h2>${TOPICS[k]}</h2><p>${state.progress[k]}/3 tahap siap</p></div></div><div class="lv-row">${lv}</div></section>`;
+        const b = best(k), n = passed(k);
+        return `<section class="card lat-topic" style="--c:var(--${k})"><div class="lat-topic-head"><span class="icon-box">${icon(k === 'translasi' ? 'tr' : k === 'pantulan' ? 'pa' : 'pu', 24)}</span><div><h2>${TOPICS[k]}</h2><p>${b === undefined ? 'Belum dicuba' : `Terbaik: ${b}/${N_Q} · Set lulus: ${n}`}</p></div></div><button type="button" class="btn lat-start" data-lat="start" data-topic="${k}">Mula Latihan ${icon('arrow', 18)}</button></section>`;
       };
       return `
-        ${head('Latihan', 'Pilih topik dan tahap. Setiap set ada 5 soalan.', 'var(--amber)', `<span class="pill pill-star">${icon('star', 16)} ${state.stars}</span>`)}
+        ${head('Latihan', 'Pilih topik. Setiap set ada 5 soalan rawak.', 'var(--amber)', `<span class="pill pill-star">${icon('star', 16)} ${state.stars}</span>`)}
         <div class="stack">
           <div class="lat-grid">${card('translasi')}${card('pantulan')}${card('putaran')}</div>
-          <div class="notice notice-amber"><span class="ico">${icon('star')}</span><p>Setiap jawapan betul memberi <b>1 bintang</b>. Dapatkan sekurang-kurangnya <b>3/5</b> untuk menandakan tahap itu siap.</p></div>
+          <div class="notice notice-amber"><span class="ico">${icon('star')}</span><p>Setiap jawapan betul memberi <b>1 bintang</b>. Dapatkan sekurang-kurangnya <b>3/5</b> untuk lulus satu set.</p></div>
         </div>`;
     }
 
@@ -556,7 +554,7 @@
       return `
         <div class="lat-top">
           <button type="button" class="back" data-lat="menu" aria-label="Kembali ke menu latihan">${icon('back')}</button>
-          <div class="lat-meta"><span class="eyebrow" style="color:var(--${s.topic})">${TOPICS[s.topic]} · ${LEVELS[s.level]}</span><b>Soalan ${s.i + 1} / ${N_Q}</b></div>
+          <div class="lat-meta"><span class="eyebrow" style="color:var(--${s.topic})">Latihan · ${TOPICS[s.topic]}</span><b>Soalan ${s.i + 1} / ${N_Q}</b></div>
           <span class="pill pill-star">${icon('star', 16)} ${s.score}</span>
         </div>
         <div class="bar lat-bar"><i style="width:${(s.i + (s.checked ? 1 : 0)) / N_Q * 100}%;background:var(--${s.topic})"></i></div>
@@ -578,16 +576,16 @@
     }
 
     function renderDone() {
-      const msg = s.score === N_Q ? 'Cemerlang! Semua betul! 🎉' : s.score >= 3 ? 'Bagus! Tahap ini siap.' : 'Cuba lagi, anda boleh! 💪';
+      const msg = s.score === N_Q ? 'Cemerlang! Semua betul! 🎉' : s.score >= 3 ? 'Bagus! Set ini lulus.' : 'Cuba lagi, anda boleh! 💪';
       return `
         <div class="lat-done card" style="--c:var(--${s.topic})">
-          <span class="eyebrow" style="color:var(--${s.topic})">${TOPICS[s.topic]} · ${LEVELS[s.level]}</span>
+          <span class="eyebrow" style="color:var(--${s.topic})">Latihan · ${TOPICS[s.topic]}</span>
           <div class="big-score">${s.score}<small>/ ${N_Q}</small></div>
           <div class="stars-row">${Array.from({ length: N_Q }, (_, i) => `<span class="${i < s.score ? 'on' : ''}">${icon('star', 30)}</span>`).join('')}</div>
           <p class="done-msg">${msg}</p>
           <p class="muted-p">Jumlah bintang anda: <b>${state.stars}</b></p>
           <div class="done-actions">
-            <button type="button" class="btn btn-primary" data-lat="start" data-topic="${s.topic}" data-level="${s.level}">Ulang Set Baharu</button>
+            <button type="button" class="btn btn-primary" data-lat="start" data-topic="${s.topic}">Ulang Set Baharu</button>
             <button type="button" class="btn btn-ghost" data-lat="menu">Pilih Latihan Lain</button>
           </div>
         </div>`;
@@ -624,7 +622,7 @@
       const el = e.target.closest('[data-lat]');
       if (!el) return false;
       const act = el.dataset.lat;
-      if (act === 'start') { start(el.dataset.topic, el.dataset.level); rerender(true); }
+      if (act === 'start') { start(el.dataset.topic); rerender(true); }
       else if (act === 'menu') { s.screen = 'menu'; rerender(true); }
       else if (act === 'sel' && !s.checked) { s.sel = Number(el.dataset.i); rerender(false); }
       else if (act === 'hint') { s.val = [...document.querySelectorAll('[data-lat-in]')].map((x) => x.value); s.hint = true; rerender(false); }
@@ -715,9 +713,6 @@
     function next() {
       if (k.i >= N_Q - 1) {
         k.total = Math.round((Date.now() - k.t0) / 1000);
-        const b = state.kuizBest;
-        k.newBest = !b || k.score > b.score || (k.score === b.score && k.total < b.time);
-        if (k.newBest) { state.kuizBest = { score: k.score, time: k.total }; save(state); }
         k.screen = 'done';
         rerender(true);
         return;
@@ -730,7 +725,6 @@
     const correctText = (q) => q.kind === 'mcq' ? q.answer : q.kind === 'coord' ? `A′(${m(q.answer[0])}, ${m(q.answer[1])})` : `translasi ${vec(q.answer[0], q.answer[1])}`;
 
     function renderStart() {
-      const b = state.kuizBest;
       return `
         ${head('Kuiz Pantas', 'Uji kefahaman anda bagi ketiga-tiga transformasi.', 'var(--green)')}
         <div class="k-start">
@@ -743,11 +737,6 @@
               <li>${icon('pen', 18)} <span>Tiada petunjuk. Jawapan betul ditunjukkan selepas setiap soalan.</span></li>
             </ul>
             <button type="button" class="btn btn-primary k-go" data-kz="begin">Mula Kuiz ${icon('arrow')}</button>
-          </section>
-          <section class="card k-record">
-            <span class="k-rec-ico">${icon('trophy', 30)}</span>
-            <h2>Rekod Tertinggi</h2>
-            ${b ? `<div class="k-rec-score">${b.score}<small>/ ${N_Q}</small></div><p>Masa: ${fmt(b.time)}</p>` : '<div class="k-rec-score">–</div><p>Belum ada rekod. Jom cuba!</p>'}
           </section>
         </div>`;
     }
@@ -808,7 +797,6 @@
       return `
         <div class="lat-done card" style="--c:var(--green)">
           <span class="eyebrow" style="color:var(--green)">Keputusan Kuiz</span>
-          ${k.newBest ? `<span class="k-newbest">${icon('trophy', 16)} Rekod baharu!</span>` : ''}
           <div class="big-score">${k.score}<small>/ ${N_Q}</small></div>
           <p class="done-msg">${msg}</p>
           <p class="muted-p">Masa: <b>${fmt(k.total)}</b> · Bintang diperoleh: <b>${k.score}</b> · Jumlah bintang: <b>${state.stars}</b></p>
