@@ -61,7 +61,7 @@ input[type=range]{accent-color:var(--accent)}
  .grid{grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto 1fr;grid-template-areas:"canvas controls" "canvas player";align-items:start;gap:20px}
  .a-canvas{grid-row:1 / span 2}
 }
-.field+.field{margin-top:14px}.axisrow{display:flex;align-items:center;gap:9px}.axisrow>select{flex:1;min-width:0;margin-top:0}.axisvalue{display:flex;align-items:center;gap:8px}.axisvalue input{width:72px;min-width:0}.axisvalue .set{margin-left:0;white-space:nowrap}.valuestatus{font-size:12px;color:var(--muted);margin-top:8px;font-weight:600}#randomize{display:none;width:100%;margin-top:12px}label{display:block;margin-bottom:6px}@media(max-width:380px){.axisvalue input{width:56px}.axisvalue .set{padding:9px 8px;font-size:12px}}
+.field+.field{margin-top:14px}.axisrow{display:flex;align-items:center;gap:9px}.axisrow>select{flex:1;min-width:0;margin-top:0}.axisvalue{display:flex;align-items:center;gap:8px}.axisvalue input{width:72px;min-width:0}.axisvalue .set{margin-left:0;white-space:nowrap}.valuestatus{font-size:12px;color:var(--muted);margin-top:8px;font-weight:600}#randomize{display:none;width:100%;margin-top:12px}label{display:block;margin-bottom:6px}.note{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent);padding:12px 14px;margin-top:12px;border-radius:12px;font-size:13px;line-height:1.6;color:var(--text)}.note strong{color:#FDBA74}.statusline{font-size:13px;margin-top:12px;line-height:1.7;color:var(--text)}.statusline strong{color:var(--muted);font-weight:600}@media(max-width:380px){.axisvalue input{width:56px}.axisvalue .set{padding:9px 8px;font-size:12px}}
 </style>
 </head>
 <body>
@@ -73,7 +73,7 @@ input[type=range]{accent-color:var(--accent)}
 <div class="grid">
 <section class="panel a-controls">
 <div class="field"><label for="shape">Bentuk</label><select id="shape"><option value="triangle">Segi tiga</option><option value="square">Segi empat</option><option value="pentagon">Pentagon</option><option value="hexagon">Heksagon</option><option value="trapezium">Trapezium</option><option value="random">Random</option></select></div>
-<div class="field"><label for="axis" class="title" style="color:var(--text);font-size:14px;font-weight:700">Garis Pantulan</label><div class="axisrow"><select id="axis"><option value="x">x = a</option><option value="y">y = b</option><option value="d">y = x</option><option value="n">y = −x</option></select><div id="valuebox" class="axisvalue"><input id="value" type="number" min="-5" max="5" step="1" value="1" aria-label="Nilai a"><button id="apply" type="button" class="set">✓ Tetapkan</button></div></div><div id="valuestatus" class="valuestatus">Nilai a = 1</div></div>
+<div class="field"><label for="axis" class="title" style="color:var(--text);font-size:14px;font-weight:700">Garis Pantulan</label><div class="axisrow"><select id="axis"><option value="x">x = a</option><option value="y">y = b</option><option value="d">y = x</option><option value="n">y = −x</option></select><div id="valuebox" class="axisvalue"><input id="value" type="number" min="-5" max="5" step="1" value="1" aria-label="Nilai a"><button id="apply" type="button" class="set">✓ Tetapkan</button></div></div><div id="valuestatus" class="valuestatus">Nilai a = 1</div><div id="explain" class="note"></div></div>
 <button id="randomize">⚄ Jana Bentuk Baharu</button>
 </section>
 <div class="a-canvas">
@@ -87,6 +87,8 @@ input[type=range]{accent-color:var(--accent)}
 <div class="row"><button id="play" class="primary">▶ Mainkan</button><button id="reset">↺ Reset</button></div>
 <div class="row" style="margin:12px 0"><label for="speed" style="margin:0">Kelajuan</label><input id="speed" type="range" min=".2" max="1" step=".1" value=".6" style="flex:1;min-width:0"><span id="speedlabel" class="muted">0.6×</span></div>
 <div class="row"><button id="prev" style="flex:1">← Sebelum</button><button id="next" style="flex:1">Seterusnya →</button></div>
+<div id="coordinates" class="statusline"></div>
+<div class="note"><strong>Ingat:</strong> Pantulan menghasilkan imej yang <strong>sama bentuk dan saiz</strong>, tetapi <strong>orientasi songsang</strong> (terbalik). Setiap titik dan imejnya berada pada <strong>jarak yang sama</strong> dari garis pantulan, dan garis yang menyambungkannya <strong>berserenjang</strong> dengan garis pantulan. Titik pada garis pantulan tidak berubah.</div>
 </section>
 </div>
 </main>
@@ -135,6 +137,11 @@ function randomShape(){
 }
 function updateButtons(){$('play').textContent=playing?'⏸ Pause':index>=steps.length?'↻ Ulang':'▶ Mainkan';$('prev').disabled=index===0&&progress===0;$('next').disabled=index>=steps.length}
 function stop(){playing=false;cancelAnimationFrame(frame);last=null;updateButtons()}
+function info(){const na=String(a).replace('-','−'),name=kind==='x'?'x = '+na:kind==='y'?'y = '+na:kind==='d'?'y = x':'y = −x',type=kind==='x'?'garis menegak':kind==='y'?'garis mengufuk':'garis condong';
+$('explain').innerHTML='Pantulkan pada garis <strong>'+name+'</strong> ('+type+').<br>Laluan hijau: bucu ke garis pantulan. Laluan oren: garis ke imej, dengan jarak yang sama.';
+const A=pts[0],B=imgs[0],f=v=>String(v).replace('-','−');let html='<strong>Bucu ditunjukkan:</strong> A<br><strong>Koordinat:</strong> A('+A.map(f).join(', ')+') → A′('+B.map(f).join(', ')+')';
+if(kind==='x'||kind==='y'){const d=Math.abs(kind==='x'?A[0]-a:A[1]-a);html+='<br><strong>Jarak A ke garis:</strong> '+d+' petak · <strong>Jarak garis ke A′:</strong> '+d+' petak'}else html+='<br><strong>Garis pantulan:</strong> '+name;
+$('coordinates').innerHTML=html}
 function setup(){
 stop();kind=$('axis').value;index=0;progress=0;mode='idle';wait=0;
 $('valuebox').style.display=kind==='x'||kind==='y'?'flex':'none';$('valuestatus').style.display=kind==='x'||kind==='y'?'block':'none';$('valuestatus').textContent='Nilai '+(kind==='x'?'a':'b')+' = '+a;$('valuestatus').style.color='#94A3B8';$('value').setAttribute('aria-label',kind==='x'?'Nilai a':'Nilai b');$('randomize').style.display=$('shape').value==='random'?'block':'none';
@@ -145,7 +152,7 @@ $('play').disabled=false;[g.axis,g.original,g.rays,g.image,g.fx].forEach(group=>
 const path=kind==='x'?`M${OX+a*S} 0 V440`:kind==='y'?`M0 ${OY-a*S} H600`:kind==='d'?'M80 440 L520 0':'M80 0 L520 440';
 make('path',{d:path,stroke:'#c084fc','stroke-width':3,'stroke-dasharray':'9 7',fill:'none'},g.axis);
 textAt(g.axis,kind==='x'?[a,6]:kind==='y'?[-8,a]:kind==='d'?[5,5]:[5,-5],kind==='x'?`x = ${a}`:kind==='y'?`y = ${a}`:kind==='d'?'y = x':'y = −x','#e9b8ff');
-pts=template.map(p=>[p[0]+anchor[0],p[1]+anchor[1]]);imgs=pts.map(reflect);
+pts=template.map(p=>[p[0]+anchor[0],p[1]+anchor[1]]);imgs=pts.map(reflect);info();
 make('polygon',{points:pts.map(P).map(q=>q.join(',')).join(' '),fill:'#0284c7','fill-opacity':'.22',stroke:'#38bdf8','stroke-width':3},g.original);
 pts.forEach((p,i)=>{let q=P(p);make('circle',{cx:q[0],cy:q[1],r:4,fill:'#7dd3fc'},g.original);textAt(g.original,p,L[i],'#e0f2fe',i===0?-14:8,i<2?18:-11)});
 steps=[];
