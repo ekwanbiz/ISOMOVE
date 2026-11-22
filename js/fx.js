@@ -180,9 +180,16 @@
     });
   }
 
+  /* ---------- Kunci zoom (rasa seperti app) ---------- */
+  // iPhone abaikan "user-scalable=no", jadi halang gerak isyarat cubit di sini
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault(), { passive: false }));
+  document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  // ketik dua kali untuk zoom sudah dihalang oleh touch-action: manipulation
+
   /* ---------- Gaya ---------- */
   const css = document.createElement('style');
   css.textContent =
+    'html{touch-action:manipulation;-webkit-text-size-adjust:100%;overscroll-behavior:none}body{overscroll-behavior:none}' +
     '#fx-layer{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}' +
     '.fx-star{position:absolute;display:block;filter:drop-shadow(0 0 6px rgba(251,191,36,.7));will-change:transform,opacity}' +
     '.snd-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;min-height:44px;padding:0;border-radius:14px;background:var(--surface,#131C2E);border:1px solid var(--border,#22304A);color:var(--text,#E6EDF7);cursor:pointer;touch-action:manipulation}' +

@@ -399,3 +399,7 @@ a.tile:active { transform: scale(0.97); background: color-mix(in srgb, var(--c) 
   .lat-top .k-timer { padding: 8px 10px; }
   .lat-top .snd-btn { width: 40px; height: 40px; min-height: 40px; border-radius: 12px; }
 }
+
+/* Rasa seperti app: tiada zoom, tiada "lantun" skrin */
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overscroll-behavior: none; }
+body { overscroll-behavior: none; }
