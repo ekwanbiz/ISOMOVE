@@ -80,7 +80,7 @@
 
   /* ---------- Halaman ---------- */
   const head = (title, sub, accent, right = '') =>
-    `<header class="page-head" style="--accent:${accent}"><div><span class="eyebrow">ISOMOVE</span><h1>${title}</h1><p>${sub}</p></div><div class="mm-tools">${right}<a class="mmhome" href="/mathmotion/" aria-label="Kembali ke MATHMOTION (semua app)"><svg viewBox="0 0 96 96" aria-hidden="true" style="width:20px;height:20px;flex:none" fill="none" stroke-linecap="round" stroke-width="12"><path d="M14 74 L26 26" stroke="#2EE6A6"/><path d="M26 26 L48 58" stroke="#FF8A3D"/><path d="M48 58 L70 26" stroke="#B57BFF"/><path d="M70 26 L82 74" stroke="#FFC93C"/></svg><span>MATHMOTION</span></a></div></header>`;
+    `<header class="page-head" style="--accent:${accent}"><div><span class="eyebrow">ISOMOVE</span><h1>${title}</h1><p>${sub}</p></div><div class="mm-tools">${right}<a class="mmhome" href="/mathmotion/#/utama" aria-label="Kembali ke MATHMOTION (semua app)"><svg viewBox="0 0 96 96" aria-hidden="true" style="width:20px;height:20px;flex:none" fill="none" stroke-linecap="round" stroke-width="12"><path d="M14 74 L26 26" stroke="#2EE6A6"/><path d="M26 26 L48 58" stroke="#FF8A3D"/><path d="M48 58 L70 26" stroke="#B57BFF"/><path d="M70 26 L82 74" stroke="#FFC93C"/></svg><span>MATHMOTION</span></a></div></header>`;
 
   const FXN = { play() {}, stars() {}, celebrate() {}, bump() {}, shake() {}, button: () => '' };
   const fx = () => window.FX || FXN;
@@ -111,7 +111,7 @@
         ${isStandalone() ? '' : `<a href="#/pasang" class="btn btn-ghost">${icon('phone', 20)} Cara Pasang di Telefon</a>`}
         <p class="note">${icon('wifi', 16)} Boleh digunakan tanpa internet</p>`;
       return `
-      <div class="splash"><a class="mmhome sp" href="/mathmotion/" aria-label="Kembali ke MATHMOTION (semua app)"><svg viewBox="0 0 96 96" aria-hidden="true" style="width:20px;height:20px;flex:none" fill="none" stroke-linecap="round" stroke-width="12"><path d="M14 74 L26 26" stroke="#2EE6A6"/><path d="M26 26 L48 58" stroke="#FF8A3D"/><path d="M48 58 L70 26" stroke="#B57BFF"/><path d="M70 26 L82 74" stroke="#FFC93C"/></svg><span>MATHMOTION</span></a>
+      <div class="splash"><a class="mmhome sp" href="/mathmotion/#/utama" aria-label="Kembali ke MATHMOTION (semua app)"><svg viewBox="0 0 96 96" aria-hidden="true" style="width:20px;height:20px;flex:none" fill="none" stroke-linecap="round" stroke-width="12"><path d="M14 74 L26 26" stroke="#2EE6A6"/><path d="M26 26 L48 58" stroke="#FF8A3D"/><path d="M48 58 L70 26" stroke="#B57BFF"/><path d="M70 26 L82 74" stroke="#FFC93C"/></svg><span>MATHMOTION</span></a>
         <div class="splash-main">
           <img class="splash-logo" src="icons/logo.svg" alt="Logo ISOMOVE" width="156" height="156">
           <h1>ISO<span>MOVE</span></h1>
