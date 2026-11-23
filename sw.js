@@ -1,6 +1,6 @@
 /* ISOMOVE service worker – membolehkan app digunakan tanpa internet.
    Tukar VERSION setiap kali fail app dikemas kini supaya murid dapat versi baharu. */
-const VERSION = 'isomove-v28';
+const VERSION = 'isomove-v29';
 
 const APP_FILES = [
   './',
