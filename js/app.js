@@ -104,23 +104,15 @@
 
   const VIEWS = {
     splash() {
-      const tiles = [['translasi', 'tr', 'Translasi', 'Gerakkan objek dengan vektor'], ['pantulan', 'pa', 'Pantulan', 'Pantulkan pada satu paksi'], ['putaran', 'pu', 'Putaran', 'Putarkan pada satu pusat']]
-        .map(([k, ic, t, d]) => `<a href="simulasi/${k}.html" class="card tile" style="--c:var(--${k})" aria-label="Buka simulasi ${t}"><span class="icon-box">${icon(ic)}</span><span class="tile-txt"><b>${t}</b><small>${d}</small></span><span class="tile-go">${icon('arrow', 16)}</span></a>`).join('');
-      const actions = `
-        <a href="#/utama" class="btn btn-primary">Jom Mula! ${icon('arrow')}</a>
-        ${isStandalone() ? '' : `<a href="#/pasang" class="btn btn-ghost">${icon('phone', 20)} Cara Pasang di Telefon</a>`}
-        <p class="note">${icon('wifi', 16)} Boleh digunakan tanpa internet</p>`;
       return `
-      <div class="splash"><a class="mmhome sp" href="/mathmotion/#/utama" aria-label="Kembali ke MATHMOTION (semua app)"><svg viewBox="0 0 96 96" aria-hidden="true" style="width:20px;height:20px;flex:none" fill="none" stroke-linecap="round" stroke-width="12"><path d="M14 74 L26 26" stroke="#2EE6A6"/><path d="M26 26 L48 58" stroke="#FF8A3D"/><path d="M48 58 L70 26" stroke="#B57BFF"/><path d="M70 26 L82 74" stroke="#FFC93C"/></svg><span>MATHMOTION</span></a>
+      <div class="splash splash-simple">
         <div class="splash-main">
           <img class="splash-logo" src="icons/logo.svg" alt="Logo ISOMOVE" width="156" height="156">
           <h1>ISO<span>MOVE</span></h1>
           <p class="slogan"><span style="color:var(--translasi)">Gerak.</span> <span style="color:var(--pantulan)">Pantul.</span> <span style="color:var(--putaran)">Putar!</span></p>
           <p class="sub">Transformasi Isometri · Matematik Tingkatan 2 · Bab 11</p>
-          <div class="splash-actions splash-desktop-actions">${actions}</div>
+          <a href="#/utama" class="btn btn-primary splash-go">Jom Mula! ${icon('arrow')}</a>
         </div>
-        <div class="tiles">${tiles}</div>
-        <div class="splash-mobile-only"><div class="splash-actions">${actions}</div></div>
       </div>`;
     },
 

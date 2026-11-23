@@ -420,3 +420,8 @@ body { overscroll-behavior: none; }
   .page-head .mmhome span { display: none; }
 }
 @media (max-height: 700px) { .mmhome.sp { display: none; } }
+
+/* Skrin pembuka ringkas */
+.splash.splash-simple { flex-direction: column; justify-content: center; align-items: center; }
+.splash-simple .splash-main { align-items: center; text-align: center; max-width: 520px; width: 100%; flex: none; }
+.splash-simple .splash-go { width: 100%; margin-top: 8px; }
